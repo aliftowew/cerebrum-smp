@@ -284,8 +284,18 @@ async function loadData(){
       fetch(sheetURL(SHEET_NAMES.steps)).then(r=>{if(!r.ok)throw new Error();return r.text()})
     ]);
 
-    const lessonsData = Papa.parse(lessonsCSV, {header:true, skipEmptyLines:true}).data;
-    const stepsData = Papa.parse(stepsCSV, {header:true, skipEmptyLines:true}).data;
+    // Smart CSV parser: find the real header row (skip title rows)
+    function smartParse(csv, headerKey){
+      const lines = csv.split('\n');
+      let startIdx = 0;
+      for(let i=0;i<Math.min(lines.length,10);i++){
+        if(lines[i].toLowerCase().includes(headerKey)){startIdx=i;break}
+      }
+      const cleanCSV = lines.slice(startIdx).join('\n');
+      return Papa.parse(cleanCSV, {header:true, skipEmptyLines:true}).data;
+    }
+    const lessonsData = smartParse(lessonsCSV, 'lesson_id');
+    const stepsData = smartParse(stepsCSV, 'lesson_id');
 
     // Build lessons
     const lessons = lessonsData.filter(r=>r.lesson_id).map(r=>({
