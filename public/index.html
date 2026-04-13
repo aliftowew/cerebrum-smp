@@ -284,18 +284,24 @@ async function loadData(){
       fetch(sheetURL(SHEET_NAMES.steps)).then(r=>{if(!r.ok)throw new Error();return r.text()})
     ]);
 
-    // Smart CSV parser: find the real header row (skip title rows)
-    function smartParse(csv, headerKey){
-      const lines = csv.split('\n');
-      let startIdx = 0;
-      for(let i=0;i<Math.min(lines.length,10);i++){
-        if(lines[i].toLowerCase().includes(headerKey)){startIdx=i;break}
-      }
-      const cleanCSV = lines.slice(startIdx).join('\n');
-      return Papa.parse(cleanCSV, {header:true, skipEmptyLines:true}).data;
+    // Smart CSV parser: handles gviz merged headers (title+column name combined)
+    function smartParse(csv){
+      const parsed = Papa.parse(csv, {header:true, skipEmptyLines:true});
+      // Fix gviz merged column names: "Title text column_name" → "column_name"
+      const fixedHeaders = parsed.meta.fields.map(f=>{
+        const parts = f.trim().split(/\s+/);
+        return parts[parts.length-1].toLowerCase();
+      });
+      return parsed.data.map(row=>{
+        const fixed={};
+        parsed.meta.fields.forEach((orig,i)=>{
+          fixed[fixedHeaders[i]]=row[orig];
+        });
+        return fixed;
+      });
     }
-    const lessonsData = smartParse(lessonsCSV, 'lesson_id');
-    const stepsData = smartParse(stepsCSV, 'lesson_id');
+    const lessonsData = smartParse(lessonsCSV);
+    const stepsData = smartParse(stepsCSV);
 
     // Build lessons
     const lessons = lessonsData.filter(r=>r.lesson_id).map(r=>({
