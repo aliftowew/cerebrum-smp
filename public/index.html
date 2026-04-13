@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerebrum SMP — Belajar Matematika Interaktif Gratis</title>
+<meta name="description" content="Platform belajar Matematika SMP gratis dengan gamifikasi. Seperti Duolingo tapi untuk Matematika!">
+<meta name="theme-color" content="#0a0a1a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:#12122a;--card2:#1a1a35;--border:#2a2a50;--pri:#6c5ce7;--pri-g:rgba(108,92,231,.3);--acc:#ff6b6b;--acc2:#feca57;--grn:#00b894;--grn-g:rgba(0,184,148,.3);--txt:#e8e8f0;--t2:#8888aa;--t3:#555577}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh}.screen.active{display:flex;flex-direction:column}
+
+/* LOADING */
+#screen-loading{align-items:center;justify-content:center;gap:16px}
+#screen-loading .spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#screen-loading p{color:var(--t2);font-size:14px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between}
+.nav-left{display:flex;align-items:center;gap:10px}
+.logo{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--pri),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-center{display:flex;gap:16px;align-items:center}
+.nav-stat{display:flex;align-items:center;gap:5px;font-weight:700;font-size:14px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.level-badge{background:linear-gradient(135deg,var(--acc2),#f0932b);color:#222;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px}
+.avatar-sm{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--acc));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:2px solid var(--pri)}
+.xp-bar-wrap{background:var(--card);padding:0 20px 8px;border-bottom:1px solid var(--border)}
+.xp-bar-info{display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:3px}
+.xp-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--pri),#a29bfe);border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* HOME */
+.home-wrap{max-width:900px;margin:0 auto;padding:20px;flex:1}
+.welcome-card{background:linear-gradient(135deg,#1a1040,#2a1060);border-radius:20px;padding:28px;margin-bottom:24px;border:1px solid #3a2070;position:relative;overflow:hidden}
+.welcome-card::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(108,92,231,.2),transparent);border-radius:50%}
+.welcome-card h2{font-size:22px;font-weight:800;margin-bottom:6px}
+.welcome-card h2 span{background:linear-gradient(135deg,#a29bfe,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.welcome-card p{color:var(--t2);font-size:13px;line-height:1.5}
+.streak-badge{display:inline-flex;align-items:center;gap:6px;background:#ff6b3520;color:#ff6b35;padding:5px 14px;border-radius:16px;font-size:12px;font-weight:700;margin-top:10px}
+.section-title{font-size:13px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1.5px;margin:24px 0 12px}
+.path-container{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 80px}
+.path-node{cursor:pointer;transition:all .2s;text-align:center}.path-node:hover{transform:scale(1.08)}.path-node.locked{opacity:.4;pointer-events:none}.path-node.locked:hover{transform:none}
+.node-btn{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;border:4px solid;margin:0 auto;transition:all .2s}
+.node-btn.done{background:var(--grn);border-color:#00d2a0;box-shadow:0 6px 0 #009975,0 6px 20px var(--grn-g)}
+.node-btn.current{background:var(--pri);border-color:#7c6cf0;box-shadow:0 6px 0 #5a4cc7,0 6px 25px var(--pri-g);animation:bounce 2s infinite}
+.node-btn.locked-btn{background:#2a2a45;border-color:#3a3a55;box-shadow:0 6px 0 #1a1a30}
+.node-btn.quiz-btn{background:linear-gradient(135deg,var(--acc),#ee5a24);border-color:#ff7675;box-shadow:0 6px 0 #c44}
+.node-btn.challenge-btn{background:linear-gradient(135deg,#9b59b6,#8e44ad);border-color:#a569bd;box-shadow:0 6px 0 #7d3c98}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.node-label{margin-top:10px;font-size:11px;font-weight:600;color:var(--t2);max-width:130px;line-height:1.3;display:inline-block}
+.node-label.act{color:var(--txt)}
+.path-conn{width:3px;height:24px;background:var(--border);margin:0 auto}.path-conn.dconn{background:var(--grn)}
+.path-node:nth-child(4n+2){margin-left:80px}.path-node:nth-child(4n+4){margin-right:80px}
+
+/* LESSON */
+.lesson-wrap{max-width:640px;margin:0 auto;padding:20px;padding-bottom:160px;flex:1;width:100%}
+.lesson-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.back-btn{background:none;border:none;color:var(--t2);font-size:24px;cursor:pointer;padding:8px}.back-btn:hover{color:var(--txt)}
+.l-progress{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.l-prog-fill{height:100%;background:linear-gradient(90deg,var(--pri),var(--acc));border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.l-hearts{display:flex;gap:3px;font-size:18px}
+.l-title-bar{text-align:center;margin-bottom:8px;font-size:12px;color:var(--t2);font-weight:600}
+.page-dots{display:flex;gap:4px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.pdot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s}
+.pdot.act{background:var(--pri);width:20px;border-radius:4px}.pdot.dn{background:var(--grn)}
+
+/* TEACH */
+.teach{background:var(--card2);border-radius:16px;padding:28px;line-height:1.9;font-size:15px;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.teach h3{font-size:20px;font-weight:800;margin-bottom:16px}
+.teach p{margin-bottom:12px;color:#ccc}
+.teach strong,.teach b{color:var(--pri)}
+.formula-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;font-size:22px;font-weight:800;margin:16px 0;color:var(--pri);line-height:1.6;white-space:pre-line}
+.vis-nl{background:var(--card);border-radius:14px;padding:20px;margin:16px 0;position:relative;height:90px}
+.nl-ax{position:absolute;top:38px;left:20px;right:20px;height:3px;background:var(--border);border-radius:2px}
+.nl-t{position:absolute;top:28px;width:2px;height:22px;background:var(--t3)}
+.nl-n{position:absolute;top:58px;font-size:11px;color:var(--t2);transform:translateX(-50%);font-weight:600}
+
+/* QUESTION */
+.q-card{background:linear-gradient(135deg,var(--card2),#1e1e40);border:1px solid var(--border);border-left:4px solid var(--pri);border-radius:16px;padding:20px;margin:16px 0;animation:fadeIn .3s}
+.q-card p{font-size:16px;font-weight:700;line-height:1.6;white-space:pre-line}
+.q-card .hint{font-size:12px;color:var(--t2);font-weight:400;margin-top:8px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.opt{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:all .15s;font-size:18px;font-weight:700;color:var(--txt)}
+.opt:hover{border-color:var(--pri);background:rgba(108,92,231,.08);transform:translateY(-2px)}
+.opt.sel{border-color:var(--pri);background:rgba(108,92,231,.15);box-shadow:0 0 20px var(--pri-g)}
+.opt.ok{border-color:var(--grn)!important;background:rgba(0,184,148,.15)!important;color:var(--grn)!important}
+.opt.no{border-color:var(--acc)!important;background:rgba(255,107,107,.1)!important;color:var(--acc)!important}
+.fill-w{display:flex;align-items:center;gap:10px;justify-content:center;margin:20px 0}
+.fill-w span{font-size:18px;font-weight:600}
+.fill-in{width:120px;background:var(--card);border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;font-size:22px;font-weight:800;color:var(--pri);outline:none;transition:border-color .2s}
+.fill-in:focus{border-color:var(--pri)}
+.fill-in.f-ok{border-color:var(--grn);color:var(--grn)}
+.fill-in.f-no{border-color:var(--acc);color:var(--acc);animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* BOTTOM */
+.btm{position:fixed;bottom:0;left:0;right:0;z-index:50}
+.fb{padding:14px 20px;display:none;align-items:center;gap:12px;max-width:640px;margin:0 auto}
+.fb.show{display:flex}
+.fb.fb-ok{background:rgba(0,184,148,.15);border-top:2px solid var(--grn)}
+.fb.fb-no{background:rgba(255,107,107,.12);border-top:2px solid var(--acc)}
+.fb-i{font-size:26px}.fb-t h4{font-size:14px;font-weight:800}.fb-t p{font-size:12px;color:var(--t2)}
+.act-bar{background:var(--card);border-top:1px solid var(--border);padding:12px 20px}
+.act-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.combo-d{font-size:13px;font-weight:700}.combo-d .cn{color:var(--acc2);font-size:18px}
+.bg{display:flex;gap:8px}
+.cbtn{background:linear-gradient(135deg,var(--pri),#7c6cf0);color:#fff;border:none;padding:14px 36px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;transition:all .2s;box-shadow:0 4px 0 #4a3cb5}
+.cbtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 0 #4a3cb5,0 6px 20px var(--pri-g)}
+.cbtn:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #4a3cb5}
+.cbtn:disabled{opacity:.4;cursor:not-allowed}
+.cbtn.c-ok{background:linear-gradient(135deg,var(--grn),#00d2a0)!important;box-shadow:0 4px 0 #009975!important}
+.cbtn.c-no{background:linear-gradient(135deg,var(--acc),#ee5a24)!important;box-shadow:0 4px 0 #c44!important}
+.sbtn{background:none;border:1px solid var(--border);color:var(--t2);padding:14px 18px;border-radius:14px;font-weight:600;font-size:13px;cursor:pointer}.sbtn:hover{border-color:var(--t2);color:var(--txt)}
+
+/* OVERLAYS */
+.ov{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(8px)}.ov.show{display:flex}
+.mc{background:var(--card);border-radius:24px;padding:40px;text-align:center;max-width:400px;width:90%;border:1px solid var(--border)}
+.mc .bi{font-size:60px;margin-bottom:12px}
+.mc h2{font-size:24px;font-weight:900;margin-bottom:8px}
+.mc p{color:var(--t2);font-size:14px;margin-bottom:20px;line-height:1.5}
+.sr{display:flex;justify-content:center;gap:24px;margin:16px 0}
+.sb{text-align:center}.sb .sn{font-size:28px;font-weight:900;color:var(--pri)}.sb .sl{font-size:11px;color:var(--t2)}
+.mb{color:#fff;border:none;padding:14px 40px;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;width:100%;transition:all .2s}.mb:hover{transform:translateY(-2px)}
+.mb.mg{background:linear-gradient(135deg,var(--grn),#00d2a0)}.mb.mgo{background:linear-gradient(135deg,var(--acc2),#f0932b);color:#222}
+.lvb{border-color:var(--acc2)!important;box-shadow:0 0 60px rgba(254,202,87,.15)}
+
+.xf{position:fixed;pointer-events:none;z-index:600;font-size:20px;font-weight:900;color:var(--pri);opacity:0}
+@keyframes fu{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.3)}}
+.cp{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:550;font-size:32px;font-weight:900;pointer-events:none;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+@keyframes ci{0%{transform:translate(-50%,-50%) scale(0);opacity:0}50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}100%{transform:translate(-50%,-50%) scale(0);opacity:0}}
+.pt{position:fixed;pointer-events:none;z-index:999;border-radius:50%}
+@keyframes pf{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+/* DONATE */
+.donate-float{position:fixed;bottom:20px;right:20px;z-index:90;background:linear-gradient(135deg,var(--grn),#00d2a0);color:#fff;border:none;padding:12px 20px;border-radius:16px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 20px var(--grn-g);transition:all .2s;display:flex;align-items:center;gap:6px}
+.donate-float:hover{transform:translateY(-3px);box-shadow:0 8px 30px var(--grn-g)}
+
+/* ERROR */
+.error-card{background:var(--card);border:1px solid var(--acc);border-radius:16px;padding:32px;max-width:500px;text-align:center}
+.error-card h3{color:var(--acc);margin-bottom:12px}
+.error-card p{color:var(--t2);font-size:13px;line-height:1.6;margin-bottom:8px}
+.error-card code{background:var(--card2);padding:2px 8px;border-radius:6px;font-size:12px;color:var(--pri)}
+.error-card a{color:var(--pri)}
+
+@media(max-width:600px){.opts{grid-template-columns:1fr}.path-node:nth-child(4n+2){margin-left:50px}.path-node:nth-child(4n+4){margin-right:50px}.nav-stat{font-size:12px}.donate-float{bottom:80px;right:12px;padding:10px 16px;font-size:12px}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="screen active" id="screen-loading">
+  <div class="spinner"></div>
+  <p>Memuat konten dari database...</p>
+</div>
+
+<!-- ERROR -->
+<div class="screen" id="screen-error">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px">
+    <div class="error-card">
+      <h3>⚠️ Tidak Bisa Memuat Data</h3>
+      <p>Pastikan Google Sheet ID sudah benar di file <code>config.js</code></p>
+      <p>Dan pastikan Google Sheet sudah di-publish ke web.</p>
+      <p style="margin-top:12px"><a href="https://github.com" target="_blank">Lihat panduan setup →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="screen-home">
+  <nav class="nav">
+    <div class="nav-left"><span style="font-size:22px">🧠</span><span class="logo">Cerebrum</span></div>
+    <div class="nav-center">
+      <div class="nav-stat"><span>🔥</span><span id="h-streak">0</span></div>
+      <div class="nav-stat"><span>⚡</span><span id="h-xp">0</span></div>
+      <div class="nav-stat"><span>❤️</span><span id="h-hearts">5</span></div>
+    </div>
+    <div class="nav-right"><div class="level-badge" id="h-lvl">Lv.1</div><div class="avatar-sm">A</div></div>
+  </nav>
+  <div class="xp-bar-wrap">
+    <div class="xp-bar-info"><span id="h-ln">Level 1 — Pemula</span><span id="h-xt">0/100 XP</span></div>
+    <div class="xp-bar"><div class="xp-fill" id="h-xb" style="width:0%"></div></div>
+  </div>
+  <div class="home-wrap">
+    <div class="welcome-card">
+      <h2>Halo, <span>Pelajar</span>! 👋</h2>
+      <p>Selamat datang di <strong>Cerebrum SMP</strong> — platform belajar Matematika interaktif yang 100% gratis!</p>
+      <div class="streak-badge" id="h-sb">🔥 Mulai streak pertamamu!</div>
+    </div>
+    <div class="section-title">📐 Bab 1 — Bilangan Bulat dan Pecahan</div>
+    <div class="path-container" id="lesson-path"></div>
+  </div>
+  <button class="donate-float" onclick="alert('Terima kasih! 💚\\n\\nFitur donasi akan segera tersedia.')">💚 Dukung Cerebrum</button>
+</div>
+
+<!-- LESSON -->
+<div class="screen" id="screen-lesson">
+  <div class="lesson-wrap">
+    <div class="lesson-header">
+      <button class="back-btn" onclick="exitLesson()">←</button>
+      <div class="l-progress"><div class="l-prog-fill" id="l-pg" style="width:0%"></div></div>
+      <div class="l-hearts" id="l-hr"></div>
+    </div>
+    <div class="l-title-bar" id="l-tb"></div>
+    <div class="page-dots" id="l-dots"></div>
+    <div id="l-body"></div>
+  </div>
+  <div class="btm">
+    <div class="fb" id="fb"><div class="fb-i" id="fbi"></div><div class="fb-t"><h4 id="fbt"></h4><p id="fbd"></p></div></div>
+    <div class="act-bar"><div class="act-inner">
+      <div class="combo-d">Combo: <span class="cn" id="l-cm">0</span>x</div>
+      <div class="bg"><button class="sbtn" onclick="skip()">Lewati</button><button class="cbtn" id="l-btn" disabled>Periksa</button></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- OVERLAYS -->
+<div class="ov" id="ov-done"><div class="mc"><div class="bi" id="od-i">🎉</div><h2 id="od-t">Lesson Selesai!</h2><p id="od-d"></p><div class="sr"><div class="sb"><div class="sn" id="od-xp">0</div><div class="sl">XP Didapat</div></div><div class="sb"><div class="sn" id="od-c">0</div><div class="sl">Benar</div></div><div class="sb"><div class="sn" id="od-m">0</div><div class="sl">Max Combo</div></div></div><button class="mb mg" onclick="closeDone()">Lanjut →</button></div></div>
+<div class="ov" id="ov-lvl"><div class="mc lvb"><div style="font-size:40px">⭐🌟⭐</div><h2 style="background:linear-gradient(135deg,var(--acc2),#f0932b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">LEVEL UP!</h2><p id="ol-t"></p><button class="mb mgo" onclick="closeLvl()">Keren! 🎉</button></div></div>
+
+<script src="config.js"></script>
+<script>
+// ===== CONFIG (from config.js) =====
+// SHEET_ID and SHEET_NAMES are defined in config.js
+
+// ===== STATE =====
+const LS=localStorage;
+const S={
+  xp:+LS.getItem('c_xp')||0,hearts:5,mh:5,streak:+LS.getItem('c_streak')||0,
+  combo:0,maxCombo:0,lXP:0,lOk:0,lTot:0,
+  cL:-1,cS:0,sel:null,ans:false,
+  done:JSON.parse(LS.getItem('c_done')||'[]'),
+  lastDay:LS.getItem('c_lastday')||'',
+  level:1,
+  lvlXP:[0,100,250,400,650,1000,1500,2200,3000],
+  lvlN:['','Pemula','Penjelajah','Petualang','Penemu','Ahli Muda','Matematikawan','Jenius','Master Cerebrum'],
+  lessons:[],
+};
+
+function save(){
+  LS.setItem('c_xp',S.xp);
+  LS.setItem('c_done',JSON.stringify(S.done));
+  LS.setItem('c_streak',S.streak);
+  LS.setItem('c_lastday',S.lastDay);
+}
+
+function calcLvl(){for(let i=S.lvlXP.length-1;i>=0;i--)if(S.xp>=S.lvlXP[i]){S.level=i;break}}
+
+// Streak logic
+function checkStreak(){
+  const today=new Date().toDateString();
+  if(S.lastDay===today)return;
+  const yesterday=new Date(Date.now()-864e5).toDateString();
+  if(S.lastDay===yesterday){S.streak++;} else if(S.lastDay!==today){S.streak=1;}
+  S.lastDay=today;save();
+}
+
+// ===== AUDIO =====
+const AC=window.AudioContext||window.webkitAudioContext;let ac;
+function ea(){if(!ac)ac=new AC()}
+function t(f,d,tp='sine',v=.12){ea();const o=ac.createOscillator(),g=ac.createGain();o.type=tp;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}
+function sOk(){t(523,.1);setTimeout(()=>t(659,.1),100);setTimeout(()=>t(784,.15),200)}
+function sNo(){t(200,.15,'sawtooth',.08);setTimeout(()=>t(180,.2,'sawtooth',.08),150)}
+function sCm(){t(880,.08);setTimeout(()=>t(1047,.08),80);setTimeout(()=>t(1319,.12),160)}
+function sLv(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>t(f,.2,'triangle',.1),i*120))}
+function sC(){t(440,.05,'sine',.06)}
+
+// ===== FETCH GOOGLE SHEETS =====
+function sheetURL(name){
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+}
+
+async function loadData(){
+  try{
+    const [lessonsCSV, stepsCSV] = await Promise.all([
+      fetch(sheetURL(SHEET_NAMES.lessons)).then(r=>{if(!r.ok)throw new Error();return r.text()}),
+      fetch(sheetURL(SHEET_NAMES.steps)).then(r=>{if(!r.ok)throw new Error();return r.text()})
+    ]);
+
+    const lessonsData = Papa.parse(lessonsCSV, {header:true, skipEmptyLines:true}).data;
+    const stepsData = Papa.parse(stepsCSV, {header:true, skipEmptyLines:true}).data;
+
+    // Build lessons
+    const lessons = lessonsData.filter(r=>r.lesson_id).map(r=>({
+      id: r.lesson_id.trim(),
+      bab: +r.bab||1,
+      order: +r.order||0,
+      title: r.title||'',
+      type: r.type||'concept',
+      xp: +r.xp_reward||10,
+      unlock: r.unlock_after||'-',
+      desc: r.description||'',
+      steps: []
+    }));
+
+    // Build steps
+    const stepMap = {};
+    stepsData.filter(r=>r.lesson_id&&r.type).forEach(r=>{
+      const lid = r.lesson_id.trim();
+      const step = { type: r.type.trim(), order: +r.step_order||0 };
+
+      if(step.type==='teach'){
+        step.title = r.title||'';
+        step.content = r.content||'';
+        step.vtype = r.visual_type||'none';
+        step.vdata = r.visual_data||'';
+      } else if(step.type==='mcq'){
+        step.question = r.question||'';
+        step.options = [r.option_a||'',r.option_b||'',r.option_c||'',r.option_d||''];
+        const cl = (r.correct_answer||'a').trim().toLowerCase();
+        step.correct = {a:0,b:1,c:2,d:3}[cl]||0;
+        step.explanation = r.explanation||'';
+      } else if(step.type==='fill'){
+        step.question = r.question||'';
+        step.answer = (r.correct_answer||'').trim();
+        step.hint = r.hint||'';
+        step.explanation = r.explanation||'';
+      }
+
+      if(!stepMap[lid]) stepMap[lid]=[];
+      stepMap[lid].push(step);
+    });
+
+    // Attach & sort
+    lessons.forEach(l=>{
+      l.steps = (stepMap[l.id]||[]).sort((a,b)=>a.order-b.order);
+    });
+    lessons.sort((a,b)=>a.order-b.order);
+
+    S.lessons = lessons;
+    checkStreak();
+    calcLvl();
+    show('screen-home');
+    renderHome();
+
+    console.log(`✅ Loaded ${lessons.length} lessons, ${stepsData.length} steps`);
+  } catch(e){
+    console.error('Load error:', e);
+    show('screen-error');
+  }
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== FORMAT =====
+function fmt(txt){
+  if(!txt)return'';
+  return txt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+
+// ===== HOME =====
+function renderHome(){
+  const ls=S.lessons;let h='';
+  ls.forEach((l,i)=>{
+    const dn=S.done.includes(l.id);
+    const cur=!dn&&(i===0||S.done.includes(ls[i-1].id));
+    const lk=!dn&&!cur;
+    const noSteps=l.steps.length===0;
+    const isLocked=lk||noSteps;
+    const icons={concept:'📖',practice:'✏️',quiz:'🏆',challenge:'⚔️'};
+    let bc=dn?'done':cur?'current':l.type==='quiz'?'quiz-btn':l.type==='challenge'?'challenge-btn':'locked-btn';
+    if(noSteps&&!dn)bc='locked-btn';
+    const ic=dn?'✓':isLocked?'🔒':icons[l.type]||'📖';
+    if(i>0)h+=`<div class="path-conn ${dn||cur?'dconn':''}"></div>`;
+    h+=`<div class="path-node ${isLocked?'locked':''}" onclick="${isLocked?'':`startL(${i})`}"><div class="node-btn ${bc}">${ic}</div><div class="node-label ${cur?'act':''}">${l.title}${noSteps&&!dn?'<br><span style=\"font-size:10px;color:var(--t3)\">(segera hadir)</span>':''}</div></div>`;
+  });
+  document.getElementById('lesson-path').innerHTML=h;
+  updHome();
+}
+
+function updHome(){
+  document.getElementById('h-xp').textContent=S.xp;
+  document.getElementById('h-streak').textContent=S.streak;
+  document.getElementById('h-hearts').textContent=S.hearts;
+  document.getElementById('h-lvl').textContent=`Lv.${S.level}`;
+  document.getElementById('h-ln').textContent=`Level ${S.level} — ${S.lvlN[S.level]}`;
+  const nx=S.lvlXP[S.level+1]||S.lvlXP[S.level];const pv=S.lvlXP[S.level]||0;
+  document.getElementById('h-xb').style.width=Math.min(100,((S.xp-pv)/(nx-pv))*100)+'%';
+  document.getElementById('h-xt').textContent=`${S.xp} / ${nx} XP`;
+  document.getElementById('h-sb').textContent=S.streak>0?`🔥 ${S.streak} hari berturut-turut!`:'🔥 Mulai streak pertamamu!';
+}
+
+// ===== LESSON =====
+function startL(i){sC();S.cL=i;S.cS=0;S.combo=0;S.maxCombo=0;S.lXP=0;S.lOk=0;S.lTot=0;S.hearts=S.mh;S.sel=null;S.ans=false;document.getElementById('l-cm').textContent='0';show('screen-lesson');renderStep()}
+function exitLesson(){show('screen-home');hideFB();renderHome()}
+function gL(){return S.lessons[S.cL]}
+function gS(){return gL().steps[S.cS]}
+
+function renderStep(){
+  const l=gL(),s=gS(),tot=l.steps.length;
+  document.getElementById('l-pg').style.width=(S.cS/tot*100)+'%';
+  document.getElementById('l-tb').textContent=l.title;
+  rHearts();hideFB();resetB();S.sel=null;S.ans=false;
+  let dots='';for(let i=0;i<tot;i++)dots+=`<div class="pdot ${i<S.cS?'dn':i===S.cS?'act':''}"></div>`;
+  document.getElementById('l-dots').innerHTML=dots;
+  const body=document.getElementById('l-body');const btn=document.getElementById('l-btn');
+
+  if(s.type==='teach'){
+    let vis='';
+    if(s.vtype==='formula'&&s.vdata)vis=`<div class="formula-box">${s.vdata}</div>`;
+    else if(s.vtype==='numberline'){
+      const p=(s.vdata||'-5,5').split(',');const mn=+p[0]||-5,mx=+p[1]||5,cnt=mx-mn;let tk='';
+      for(let n=mn;n<=mx;n++){const pc=((n-mn)/cnt)*80+10;tk+=`<div class="nl-t" style="left:${pc}%"></div><div class="nl-n" style="left:${pc}%;${n===0?'color:var(--acc2);font-weight:800':''}">${n}</div>`}
+      vis=`<div class="vis-nl"><div class="nl-ax"></div>${tk}</div>`;
+    }
+    body.innerHTML=`<div class="teach">${s.title?`<h3>${s.title}</h3>`:''}${fmt(s.content)}${vis}</div>`;
+    btn.textContent='Lanjut →';btn.disabled=false;btn.onclick=()=>next();
+  } else if(s.type==='mcq'){
+    body.innerHTML=`<div class="q-card"><p>${fmt(s.question)}</p></div><div class="opts">${s.options.map((o,i)=>`<div class="opt" onclick="selO(this,${i})">${o}</div>`).join('')}</div>`;
+    btn.textContent='Periksa';btn.disabled=true;btn.onclick=()=>check();
+  } else if(s.type==='fill'){
+    body.innerHTML=`<div class="q-card"><p>${fmt(s.question)}</p>${s.hint?`<p class="hint">💡 ${s.hint}</p>`:''}</div><div class="fill-w"><span>Jawaban:</span><input type="text" class="fill-in" id="fi" placeholder="?" oninput="onFI(this)" autocomplete="off"></div>`;
+    btn.textContent='Periksa';btn.disabled=true;btn.onclick=()=>check();
+    setTimeout(()=>document.getElementById('fi')?.focus(),150);
+  }
+}
+
+function selO(el,i){sC();document.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');S.sel=i;document.getElementById('l-btn').disabled=false}
+function onFI(el){S.sel=el.value.trim();document.getElementById('l-btn').disabled=!el.value.trim()}
+
+function check(){
+  if(S.ans)return;S.ans=true;
+  const s=gS();let ok=false;S.lTot++;
+  if(s.type==='mcq'){
+    ok=S.sel===s.correct;
+    document.querySelectorAll('.opt').forEach((b,i)=>{b.style.pointerEvents='none';if(i===s.correct)b.classList.add('ok');if(i===S.sel&&!ok)b.classList.add('no')});
+  } else if(s.type==='fill'){
+    const a=String(S.sel).replace(/\s/g,'').replace(/[.,]/g,'').toLowerCase();
+    const tgt=String(s.answer).replace(/\s/g,'').replace(/[.,]/g,'').toLowerCase();
+    ok=(a===tgt);
+    const inp=document.getElementById('fi');inp.readOnly=true;
+    if(ok)inp.classList.add('f-ok');else{inp.classList.add('f-no');setTimeout(()=>{inp.value=s.answer;inp.className='fill-in f-ok'},600)}
+  }
+  if(ok){
+    S.combo++;if(S.combo>S.maxCombo)S.maxCombo=S.combo;S.lOk++;
+    const bonus=Math.min(S.combo,5);const xp=5+bonus;S.lXP+=xp;
+    sOk();showFB(1,'✅ Benar! +'+xp+' XP',s.explanation);spawnXP(xp);
+    if(S.combo>=3)showCmb(S.combo);
+    document.getElementById('l-cm').textContent=S.combo;
+  } else {
+    S.combo=0;S.hearts=Math.max(0,S.hearts-1);
+    sNo();showFB(0,'❌ Belum tepat',s.explanation);rHearts();
+    document.getElementById('l-cm').textContent='0';
+  }
+  const btn=document.getElementById('l-btn');
+  btn.textContent='Lanjut →';btn.disabled=false;btn.className='cbtn '+(ok?'c-ok':'c-no');btn.onclick=()=>next();
+}
+
+function next(){sC();S.cS++;if(S.cS>=gL().steps.length)complete();else renderStep()}
+function skip(){sC();const s=gS();if(s.type!=='teach'){S.lTot++;S.combo=0;document.getElementById('l-cm').textContent='0'}next()}
+
+function complete(){
+  const l=gL();const bonus=l.xp||10;const total=S.lXP+bonus;
+  S.xp+=total;const oldLvl=S.level;
+  if(!S.done.includes(l.id))S.done.push(l.id);
+  save();calcLvl();
+  document.getElementById('l-pg').style.width='100%';
+  const acc=S.lTot>0?Math.round((S.lOk/S.lTot)*100):100;
+  document.getElementById('od-i').textContent=l.type==='quiz'?'🏆':'🎉';
+  document.getElementById('od-t').textContent=l.type==='quiz'?'Quiz Selesai!':'Lesson Selesai!';
+  document.getElementById('od-d').textContent=acc>=80?'Luar biasa! Kamu menguasai materi ini! 🌟':acc>=50?'Bagus! Terus berlatih ya! 💪':'Jangan menyerah! Ulangi lesson ini.';
+  document.getElementById('od-xp').textContent=total;
+  document.getElementById('od-c').textContent=S.lOk+'/'+S.lTot;
+  document.getElementById('od-m').textContent=S.maxCombo+'x';
+  document.getElementById('ov-done').classList.add('show');
+  confetti();
+  if(S.level>oldLvl)setTimeout(()=>{document.getElementById('ol-t').textContent=`Kamu naik ke Level ${S.level} — ${S.lvlN[S.level]}!`;document.getElementById('ov-lvl').classList.add('show');sLv()},1500);
+}
+
+function closeDone(){document.getElementById('ov-done').classList.remove('show');exitLesson()}
+function closeLvl(){document.getElementById('ov-lvl').classList.remove('show')}
+
+// ===== UI =====
+function rHearts(){document.getElementById('l-hr').innerHTML=Array(S.mh).fill(0).map((_,i)=>i<S.hearts?'❤️':'🖤').join('')}
+function showFB(ok,title,desc){const b=document.getElementById('fb');b.className='fb show '+(ok?'fb-ok':'fb-no');document.getElementById('fbi').textContent=ok?'🎉':'💡';const tt=document.getElementById('fbt');tt.textContent=title;tt.style.color=ok?'var(--grn)':'var(--acc)';document.getElementById('fbd').textContent=desc||''}
+function hideFB(){document.getElementById('fb').className='fb'}
+function resetB(){const b=document.getElementById('l-btn');b.textContent='Periksa';b.disabled=true;b.className='cbtn'}
+function spawnXP(xp){const e=document.createElement('div');e.className='xf';e.textContent=`+${xp} XP`;e.style.left=(innerWidth/2-30)+'px';e.style.top=(innerHeight/2)+'px';e.style.animation='fu .8s ease-out forwards';document.body.appendChild(e);setTimeout(()=>e.remove(),900)}
+function showCmb(c){const tx={3:'🔥 3x Combo!',4:'🔥🔥 4x Fire!',5:'⚡ 5x Unstoppable!'};const e=document.createElement('div');e.className='cp';e.textContent=tx[Math.min(c,5)]||`🌟 ${c}x LEGENDARY!`;e.style.color=c>=5?'var(--acc2)':'var(--acc)';e.style.animation='ci .8s ease forwards';document.body.appendChild(e);sCm();setTimeout(()=>e.remove(),900)}
+function confetti(){const cl=['#6c5ce7','#ff6b6b','#feca57','#00b894','#fd79a8','#a29bfe'];for(let i=0;i<40;i++){const p=document.createElement('div');p.className='pt';p.style.left=Math.random()*100+'vw';p.style.top='-10px';p.style.width=p.style.height=(4+Math.random()*8)+'px';p.style.background=cl[~~(Math.random()*cl.length)];p.style.animation=`pf ${1.5+Math.random()*2}s ease-out forwards`;p.style.animationDelay=Math.random()*.5+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),4000)}}
+
+// ===== INIT =====
+loadData();
+</script>
+</body>
+</html>

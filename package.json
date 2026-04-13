@@ -1,0 +1,9 @@
+{
+  "name": "cerebrum-smp",
+  "version": "1.0.0",
+  "description": "Cerebrum SMP — Platform belajar Matematika interaktif gratis",
+  "scripts": {
+    "dev": "npx serve public",
+    "build": "echo 'Static site — no build needed'"
+  }
+}
