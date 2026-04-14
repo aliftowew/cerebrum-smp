@@ -27,20 +27,14 @@ const FIREBASE_CONFIG = {
   measurementId: "G-X8R05VGESL"
 };
 
-// ===== MIDTRANS =====
-// Cara setup:
-// 1. Login ke https://dashboard.midtrans.com
-// 2. Settings → Access Keys
-// 3. Copy Client Key (untuk frontend)
-// 4. Server Key dipakai di backend/Cloud Function
-//
-// Gunakan Sandbox keys untuk testing:
-// https://dashboard.sandbox.midtrans.com
-const MIDTRANS_CONFIG = {
-  clientKey: "Mid-client-X9_3LvGUEROThk4f",
-  // true = sandbox (testing), false = production
-  sandbox: true,
-  // Harga donasi dalam Rupiah
-  donationAmount: 29000,
-  donationName: "Cerebrum Premium — Kunci Unlimited",
+// ===== SAWERIA (DONASI / PREMIUM) =====
+// Ganti 'YOUR_USERNAME' dengan username Saweria kamu
+// Contoh: kalau link Saweria-mu https://saweria.co/cerebrumsmp,
+// maka username = "cerebrumsmp"
+const SAWERIA_CONFIG = {
+  username: "aliftowew",
+  // Harga minimal donasi untuk dapat premium (dalam Rupiah)
+  premiumAmount: 49000,
+  // Pesan yang ditampilkan sebagai panduan ke user
+  instructionMessage: "Donasi minimal Rp 49.000 dan tulis EMAIL kamu di pesan Saweria untuk aktivasi Premium otomatis."
 };
