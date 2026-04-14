@@ -375,7 +375,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
   </div>
 </div>
 
-<!-- OVERLAY: DONATE / MIDTRANS -->
+<!-- OVERLAY: DONATE / SAWERIA -->
 <div class="ov" id="ov-donate">
   <div class="mc">
     <div style="font-size:48px;margin-bottom:8px">⭐</div>
@@ -387,9 +387,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
       <div style="font-size:14px;margin-bottom:6px">❤️ Akses semua materi tanpa batas</div>
       <div style="font-size:14px">🌟 Badge premium di profil</div>
     </div>
-    <div style="font-size:28px;font-weight:900;color:var(--acc2);margin:12px 0" id="donate-price">Rp 29.000</div>
-    <div style="font-size:12px;color:var(--t3);margin-bottom:16px">Sekali bayar, selamanya!</div>
-    <button class="mb mgo" onclick="startPayment()" id="btn-pay">💳 Bayar Sekarang</button>
+    <div style="font-size:28px;font-weight:900;color:var(--acc2);margin:8px 0" id="donate-price">Rp 29.000</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Sekali donasi, premium selamanya!</div>
+
+    <div style="background:rgba(108,92,231,.1);border:1px solid var(--pri);border-radius:12px;padding:14px;margin:12px 0;text-align:left">
+      <div style="font-size:12px;font-weight:800;color:var(--pri);margin-bottom:6px">📌 PENTING — Cara Premium Aktif Otomatis:</div>
+      <div style="font-size:12px;color:var(--txt);line-height:1.6">
+        1. Klik <strong>"Buka Saweria"</strong> di bawah<br>
+        2. Donasi minimal <strong>Rp 29.000</strong><br>
+        3. Di kolom pesan, <strong>tulis email Google kamu</strong>:<br>
+        <code id="donate-email" style="background:var(--card2);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--acc2);display:inline-block;margin-top:4px">-</code><br>
+        4. Bayar → premium aktif dalam 1-2 menit
+      </div>
+    </div>
+
+    <button class="mb mgo" onclick="openSaweria()" id="btn-pay">💚 Buka Saweria</button>
+    <button class="mb" onclick="checkPremiumStatus()" style="margin-top:10px;background:var(--card2);border:1px solid var(--border);color:var(--txt)">🔄 Sudah bayar? Cek status</button>
     <button class="mb m-exit" style="margin-top:10px" onclick="closeDonate()">← Nanti saja</button>
   </div>
 </div>
@@ -938,115 +951,98 @@ async function sendReport(){
   }
 }
 
-// ===== MIDTRANS PAYMENT =====
+// ===== SAWERIA PAYMENT =====
 function openDonate(){
   toggleProfile(); // close profile if open
-  const price = MIDTRANS_CONFIG.donationAmount || 29000;
+  const price = SAWERIA_CONFIG.premiumAmount || 29000;
   document.getElementById('donate-price').textContent = 'Rp ' + price.toLocaleString('id-ID');
+  // Show user's email so they can copy it
+  const emailEl = document.getElementById('donate-email');
+  if(emailEl && currentUser){
+    emailEl.textContent = currentUser.email || '-';
+  }
   document.getElementById('ov-donate').classList.add('show');
 }
 function closeDonate(){document.getElementById('ov-donate').classList.remove('show')}
 
-async function startPayment(){
-  const btn = document.getElementById('btn-pay');
-  btn.disabled = true;
-  btn.textContent = 'Memproses...';
-
-  try{
-    // Generate order_id
-    const orderId = 'CEREBRUM-' + currentUser.uid.slice(0,8) + '-' + Date.now();
-
-    // Call your backend/Cloud Function to create Snap token
-    // For now, we create a simple transaction parameter
-    // NOTE: In production, token creation MUST happen on server side!
-    //
-    // Option 1: Use Cloud Function (recommended)
-    // const res = await fetch('YOUR_CLOUD_FUNCTION_URL/createTransaction', {
-    //   method: 'POST',
-    //   headers: {'Content-Type':'application/json'},
-    //   body: JSON.stringify({
-    //     orderId,
-    //     amount: MIDTRANS_CONFIG.donationAmount,
-    //     userId: currentUser.uid,
-    //     userName: currentUser.displayName,
-    //     userEmail: currentUser.email
-    //   })
-    // });
-    // const {token} = await res.json();
-    // window.snap.pay(token, { ... callbacks });
-
-    // Option 2: Direct Snap (for testing/sandbox only)
-    // Requires Midtrans Snap.js loaded
-    if(typeof window.snap !== 'undefined'){
-      window.snap.pay(orderId, {
-        onSuccess: function(result){
-          handlePaymentSuccess(result);
-        },
-        onPending: function(result){
-          console.log('Payment pending:', result);
-          alert('Pembayaran pending. Status akan diupdate otomatis.');
-          closeDonate();
-        },
-        onError: function(result){
-          console.error('Payment error:', result);
-          alert('Pembayaran gagal. Silakan coba lagi.');
-        },
-        onClose: function(){
-          btn.disabled = false;
-          btn.textContent = '💳 Bayar Sekarang';
-        }
-      });
-    } else {
-      // Snap.js not loaded — fallback: save payment intent to Firestore
-      // and show manual transfer instructions
-      await db.collection('payment_intents').add({
-        userId: currentUser.uid,
-        orderId: orderId,
-        amount: MIDTRANS_CONFIG.donationAmount,
-        status: 'pending',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      // For demo/testing: activate premium immediately
-      // REMOVE THIS IN PRODUCTION — let server webhook handle it
-      if(MIDTRANS_CONFIG.sandbox){
-        handlePaymentSuccess({order_id: orderId, transaction_status: 'sandbox_test'});
-        return;
-      }
-
-      alert('Snap.js belum dimuat. Pastikan Midtrans Client Key sudah benar dan script Snap.js sudah ditambahkan.');
-    }
-  } catch(e){
-    console.error('Payment error:', e);
-    alert('Terjadi kesalahan. Coba lagi nanti.');
+function openSaweria(){
+  if(!SAWERIA_CONFIG.username || SAWERIA_CONFIG.username === 'YOUR_USERNAME'){
+    alert('⚠️ Admin belum mengatur link Saweria. Silakan hubungi admin.');
+    return;
   }
-  btn.disabled = false;
-  btn.textContent = '💳 Bayar Sekarang';
-}
-
-async function handlePaymentSuccess(result){
-  console.log('Payment success:', result);
-  S.premium = true;
-  S.keys = 999;
-  await saveUserData();
-
-  // Record transaction
+  // Log pending donation intent to Firestore (helps admin trace manual aktivasi)
   try{
-    await db.collection('transactions').add({
+    db.collection('donation_intents').add({
       userId: currentUser.uid,
-      orderId: result.order_id || '',
-      transactionStatus: result.transaction_status || 'success',
-      amount: MIDTRANS_CONFIG.donationAmount,
+      userEmail: currentUser.email,
+      userName: currentUser.displayName || '',
+      amount: SAWERIA_CONFIG.premiumAmount,
+      status: 'opened',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-  } catch(e){ console.error('Transaction log error:', e) }
+  } catch(e){ console.error('Intent log error:', e) }
 
-  closeDonate();
-  updateKeyBar();
-  renderHome();
-  // Show success celebration
-  alert('🎉 Terima kasih! Kamu sekarang Premium — Kunci Unlimited selamanya!');
-  confetti();
+  // Open Saweria in new tab with pre-filled amount (if supported)
+  const url = `https://saweria.co/${SAWERIA_CONFIG.username}`;
+  window.open(url, '_blank');
+}
+
+async function checkPremiumStatus(){
+  const btn = event.target;
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = '🔄 Mengecek...';
+
+  try{
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    if(doc.exists && doc.data().premium){
+      S.premium = true;
+      S.keys = 999;
+      closeDonate();
+      updateKeyBar();
+      renderHome();
+      alert('🎉 Terima kasih! Kamu sekarang Premium — Kunci Unlimited selamanya!');
+      confetti();
+    } else {
+      btn.textContent = '❌ Belum terdeteksi, coba lagi 1-2 menit';
+      setTimeout(()=>{
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }, 3000);
+    }
+  } catch(e){
+    console.error('Check status error:', e);
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+// Auto-check premium status every 10 seconds while donate modal is open
+let premiumPollInterval = null;
+function startPremiumPolling(){
+  if(premiumPollInterval) return;
+  premiumPollInterval = setInterval(async ()=>{
+    const modalOpen = document.getElementById('ov-donate').classList.contains('show');
+    if(!modalOpen){
+      clearInterval(premiumPollInterval);
+      premiumPollInterval = null;
+      return;
+    }
+    try{
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      if(doc.exists && doc.data().premium){
+        S.premium = true;
+        S.keys = 999;
+        clearInterval(premiumPollInterval);
+        premiumPollInterval = null;
+        closeDonate();
+        updateKeyBar();
+        renderHome();
+        alert('🎉 Terima kasih! Premium aktif — Kunci Unlimited selamanya!');
+        confetti();
+      }
+    } catch(e){ /* silent */ }
+  }, 10000);
 }
 
 // ===== UI HELPERS =====
@@ -1058,16 +1054,12 @@ function spawnXP(xp){const e=document.createElement('div');e.className='xf';e.te
 function showCmb(c){const tx={3:'🔥 3x Combo!',4:'🔥🔥 4x Fire!',5:'⚡ 5x Unstoppable!'};const e=document.createElement('div');e.className='cp';e.textContent=tx[Math.min(c,5)]||`🌟 ${c}x LEGENDARY!`;e.style.color=c>=5?'var(--acc2)':'var(--acc)';e.style.animation='ci .8s ease forwards';document.body.appendChild(e);sCm();setTimeout(()=>e.remove(),900)}
 function confetti(){const cl=['#6c5ce7','#ff6b6b','#feca57','#00b894','#fd79a8','#a29bfe'];for(let i=0;i<40;i++){const p=document.createElement('div');p.className='pt';p.style.left=Math.random()*100+'vw';p.style.top='-10px';p.style.width=p.style.height=(4+Math.random()*8)+'px';p.style.background=cl[~~(Math.random()*cl.length)];p.style.animation=`pf ${1.5+Math.random()*2}s ease-out forwards`;p.style.animationDelay=Math.random()*.5+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),4000)}}
 
-// Load Midtrans Snap.js dynamically
-(function loadMidtransSnap(){
-  if(!MIDTRANS_CONFIG || !MIDTRANS_CONFIG.clientKey || MIDTRANS_CONFIG.clientKey === 'YOUR_MIDTRANS_CLIENT_KEY') return;
-  const s = document.createElement('script');
-  s.src = MIDTRANS_CONFIG.sandbox
-    ? 'https://app.sandbox.midtrans.com/snap/snap.js'
-    : 'https://app.midtrans.com/snap/snap.js';
-  s.setAttribute('data-client-key', MIDTRANS_CONFIG.clientKey);
-  document.head.appendChild(s);
-})();
+// Start polling premium status after user clicks "Buka Saweria"
+const _origOpenSaweria = openSaweria;
+openSaweria = function(){
+  _origOpenSaweria();
+  startPremiumPolling();
+};
 
 // ===== INIT =====
 // Auth state listener handles everything — see onAuthStateChanged above
