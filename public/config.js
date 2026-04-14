@@ -37,7 +37,7 @@ const FIREBASE_CONFIG = {
 // Gunakan Sandbox keys untuk testing:
 // https://dashboard.sandbox.midtrans.com
 const MIDTRANS_CONFIG = {
-  clientKey: "YOUR_MIDTRANS_CLIENT_KEY",
+  clientKey: "Mid-client-X9_3LvGUEROThk4f",
   // true = sandbox (testing), false = production
   sandbox: true,
   // Harga donasi dalam Rupiah
