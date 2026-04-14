@@ -20,14 +20,9 @@ const FIREBASE_CONFIG = {
   appId: "YOUR_APP_ID"
 };
 
-// ===== SAWERIA (DONASI / PREMIUM) =====
-// Ganti 'YOUR_USERNAME' dengan username Saweria kamu
-// Contoh: kalau link Saweria-mu https://saweria.co/cerebrumsmp,
-// maka username = "cerebrumsmp"
+// ===== SAWERIA (DONASI SUKARELA) =====
+// Cerebrum gratis selamanya — Saweria hanya untuk dukungan sukarela
+// Username Saweria: https://saweria.co/aliftowew
 const SAWERIA_CONFIG = {
-  username: "aliftowew",
-  // Harga minimal donasi untuk dapat premium (dalam Rupiah)
-  premiumAmount: 29000,
-  // Pesan yang ditampilkan sebagai panduan ke user
-  instructionMessage: "Donasi minimal Rp 29.000 dan tulis EMAIL kamu di pesan Saweria untuk aktivasi Premium otomatis."
+  username: "aliftowew"
 };

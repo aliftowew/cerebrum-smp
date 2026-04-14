@@ -274,19 +274,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
     <div class="pd-header">
       <div class="pd-name" id="pd-name">User</div>
       <div class="pd-email" id="pd-email">-</div>
-      <div class="pd-premium" id="pd-premium" style="display:none">⭐ Premium — Kunci Unlimited</div>
+      <div class="pd-premium" id="pd-premium" style="display:none"></div>
     </div>
-    <button class="pd-item" onclick="openDonate()">🔑 Upgrade ke Premium</button>
+    <button class="pd-item" onclick="openDonate()">💚 Dukung Cerebrum</button>
     <button class="pd-item pd-logout" onclick="logoutUser()">🚪 Keluar</button>
   </div>
   <div class="xp-bar-wrap">
     <div class="xp-bar-info"><span id="h-ln">Level 1 — Pemula</span><span id="h-xt">0/100 XP</span></div>
     <div class="xp-bar"><div class="xp-fill" id="h-xb" style="width:0%"></div></div>
   </div>
-  <div class="key-bar" id="key-bar">
-    <div class="key-info" id="key-display">🔑 <span class="key-count" id="key-count">2</span> / 2 kunci tersisa hari ini</div>
+  <div class="key-bar" id="key-bar" style="display:none">
+    <div class="key-info" id="key-display"></div>
     <div class="key-timer" id="key-timer"></div>
-    <button class="key-upgrade" onclick="openDonate()" id="key-upgrade-btn">Upgrade Unlimited</button>
+    <button class="key-upgrade" onclick="openDonate()" id="key-upgrade-btn" style="display:none"></button>
   </div>
   <div class="home-wrap">
     <div class="welcome-card">
@@ -332,9 +332,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
   <div class="mc">
     <div class="hearts-empty-icon">💔</div>
     <h2 style="color:var(--acc)">Hati Habis!</h2>
-    <p>Lesson gagal. Kamu bisa mengulang lesson ini jika masih punya kunci.</p>
-    <div class="retry-cost">🔑 Mengulang lesson menggunakan 1 kunci</div>
-    <button class="mb m-retry" id="btn-retry" onclick="retryLesson()">🔄 Ulang Lesson (1 🔑)</button>
+    <p>Lesson gagal. Kamu bisa mengulang lesson ini.</p>
+    <div class="retry-cost">💪 Coba lagi dan kuasai materinya!</div>
+    <button class="mb m-retry" id="btn-retry" onclick="retryLesson()">🔄 Ulang Lesson</button>
     <button class="mb m-exit" onclick="heartsExitHome()">← Kembali ke Home</button>
   </div>
 </div>
@@ -349,7 +349,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
       <p>🔑 Kunci reset setiap <strong style="color:var(--txt)">tengah malam</strong></p>
       <p id="nokeys-timer"></p>
     </div>
-    <button class="mb m-donate" onclick="closeNoKeys();openDonate()">⭐ Upgrade Premium — Kunci Unlimited</button>
+    <button class="mb m-donate" onclick="closeNoKeys();openDonate()">💚 Dukung Cerebrum</button>
     <button class="mb m-exit" onclick="closeNoKeys()">← Kembali</button>
   </div>
 </div>
@@ -378,31 +378,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-he
 <!-- OVERLAY: DONATE / SAWERIA -->
 <div class="ov" id="ov-donate">
   <div class="mc">
-    <div style="font-size:48px;margin-bottom:8px">⭐</div>
-    <h2 style="background:linear-gradient(135deg,var(--acc2),#f0932b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Cerebrum Premium</h2>
-    <p>Dukung Cerebrum dan dapatkan <strong style="color:var(--acc2)">kunci unlimited</strong> selamanya!</p>
-    <div style="background:var(--card2);border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-      <div style="font-size:13px;color:var(--t2);margin-bottom:8px">Yang kamu dapat:</div>
-      <div style="font-size:14px;margin-bottom:6px">🔑 Kunci unlimited (tidak ada batasan harian)</div>
-      <div style="font-size:14px;margin-bottom:6px">❤️ Akses semua materi tanpa batas</div>
-      <div style="font-size:14px">🌟 Badge premium di profil</div>
+    <div style="font-size:48px;margin-bottom:8px">💚</div>
+    <h2 style="background:linear-gradient(135deg,var(--grn),#26d0a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Dukung Cerebrum</h2>
+    <p style="line-height:1.6">Cerebrum <strong style="color:var(--grn)">100% gratis selamanya</strong> untuk semua siswa SMP di Indonesia. 🇮🇩</p>
+    <p style="line-height:1.6;color:var(--t2);font-size:14px;margin-top:8px">Kalau materinya membantu kamu, kamu bisa kasih dukungan seikhlasnya untuk biaya server &amp; pengembangan materi baru.</p>
+    <div style="background:var(--card2);border-radius:12px;padding:14px;margin:16px 0;text-align:left">
+      <div style="font-size:13px;color:var(--t2);margin-bottom:8px">Donasimu dipakai untuk:</div>
+      <div style="font-size:14px;margin-bottom:6px">📚 Bikin materi baru (Aljabar, Geometri, dll)</div>
+      <div style="font-size:14px;margin-bottom:6px">🖥️ Biaya server &amp; database</div>
+      <div style="font-size:14px">☕ Ngopi buat developer biar tetep semangat</div>
     </div>
-    <div style="font-size:28px;font-weight:900;color:var(--acc2);margin:8px 0" id="donate-price">Rp 29.000</div>
-    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Sekali donasi, premium selamanya!</div>
-
-    <div style="background:rgba(108,92,231,.1);border:1px solid var(--pri);border-radius:12px;padding:14px;margin:12px 0;text-align:left">
-      <div style="font-size:12px;font-weight:800;color:var(--pri);margin-bottom:6px">📌 PENTING — Cara Premium Aktif Otomatis:</div>
-      <div style="font-size:12px;color:var(--txt);line-height:1.6">
-        1. Klik <strong>"Buka Saweria"</strong> di bawah<br>
-        2. Donasi minimal <strong>Rp 29.000</strong><br>
-        3. Di kolom pesan, <strong>tulis email Google kamu</strong>:<br>
-        <code id="donate-email" style="background:var(--card2);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--acc2);display:inline-block;margin-top:4px">-</code><br>
-        4. Bayar → premium aktif dalam 1-2 menit
-      </div>
-    </div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Berapapun jumlahnya sangat berarti 🙏</div>
 
     <button class="mb mgo" onclick="openSaweria()" id="btn-pay">💚 Buka Saweria</button>
-    <button class="mb" onclick="checkPremiumStatus()" style="margin-top:10px;background:var(--card2);border:1px solid var(--border);color:var(--txt)">🔄 Sudah bayar? Cek status</button>
     <button class="mb m-exit" style="margin-top:10px" onclick="closeDonate()">← Nanti saja</button>
   </div>
 </div>
@@ -423,7 +411,7 @@ const S={
   done:[],
   lastDay:'',
   level:1,
-  keys:2,maxKeys:2,lastKeyReset:'',premium:false,
+  keys:999,maxKeys:999,lastKeyReset:'',premium:false,
   lvlXP:[0,100,250,400,650,1000,1500,2200,3000],
   lvlN:['','Pemula','Penjelajah','Petualang','Penemu','Ahli Muda','Matematikawan','Jenius','Master Cerebrum'],
   lessons:[],
@@ -466,14 +454,14 @@ async function loadUserData(){
       S.streak = d.streak || 0;
       S.done = d.done || [];
       S.lastDay = d.lastDay || '';
-      S.keys = d.keys ?? 2;
-      S.maxKeys = 2;
+      S.keys = 999;
+      S.maxKeys = 999;
       S.lastKeyReset = d.lastKeyReset || '';
-      S.premium = d.premium || false;
+      S.premium = false;
     } else {
       // New user — create doc
       await db.collection('users').doc(currentUser.uid).set({
-        xp:0, streak:0, done:[], lastDay:'', keys:2, lastKeyReset:'', premium:false,
+        xp:0, streak:0, done:[], lastDay:'', keys:999, lastKeyReset:'', premium:false,
         displayName: currentUser.displayName || '',
         email: currentUser.email || '',
         photoURL: currentUser.photoURL || '',
@@ -501,12 +489,9 @@ async function saveUserData(){
 }
 
 function resetKeysIfNewDay(){
-  const today = new Date().toDateString();
-  if(S.lastKeyReset !== today){
-    S.keys = S.maxKeys;
-    S.lastKeyReset = today;
-    saveUserData();
-  }
+  // Keys selalu unlimited (999) — fungsi ini disisakan untuk kompatibilitas
+  S.keys = 999;
+  S.maxKeys = 999;
 }
 
 function calcLvl(){for(let i=S.lvlXP.length-1;i>=0;i--)if(S.xp>=S.lvlXP[i]){S.level=i;break}}
@@ -666,33 +651,9 @@ function renderHome(){
 }
 
 function updateKeyBar(){
-  const keyBar = document.getElementById('key-bar');
-  const keyDisplay = document.getElementById('key-display');
-  const keyCount = document.getElementById('key-count');
-  const keyTimer = document.getElementById('key-timer');
-  const keyUpgradeBtn = document.getElementById('key-upgrade-btn');
-
-  if(S.premium){
-    keyDisplay.className = 'key-info premium';
-    keyDisplay.innerHTML = '🔑 <span style="color:var(--grn)">∞</span> Unlimited — Premium';
-    keyTimer.textContent = '';
-    keyUpgradeBtn.style.display = 'none';
-    document.getElementById('h-keys').textContent = '∞';
-  } else {
-    keyDisplay.className = 'key-info';
-    keyDisplay.innerHTML = `🔑 <span class="key-count">${S.keys}</span> / ${S.maxKeys} kunci tersisa hari ini`;
-    keyUpgradeBtn.style.display = '';
-    document.getElementById('h-keys').textContent = S.keys;
-
-    // Timer to midnight
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24,0,0,0);
-    const diff = midnight - now;
-    const hrs = Math.floor(diff/3600000);
-    const mins = Math.floor((diff%3600000)/60000);
-    keyTimer.textContent = `Reset dalam ${hrs}j ${mins}m`;
-  }
+  // Key bar disembunyikan — semua user punya kunci unlimited
+  const hk = document.getElementById('h-keys');
+  if(hk) hk.textContent = '∞';
 }
 
 function updHome(){
@@ -720,31 +681,7 @@ document.addEventListener('click',(e)=>{
 
 // ===== KEY SYSTEM =====
 function tryStartLesson(i){
-  const lesson = S.lessons[i];
-  const alreadyDone = S.done.includes(lesson.id);
-
-  // Premium users bypass key check
-  if(S.premium){
-    startL(i);
-    return;
-  }
-
-  // Already completed lessons are free to revisit
-  if(alreadyDone){
-    startL(i);
-    return;
-  }
-
-  // Check keys
-  if(S.keys <= 0){
-    showNoKeys();
-    return;
-  }
-
-  // Use a key
-  S.keys--;
-  saveUserData();
-  updateKeyBar();
+  // Semua user punya kunci unlimited — langsung mulai lesson
   startL(i);
 }
 
@@ -868,33 +805,13 @@ function closeLvl(){document.getElementById('ov-lvl').classList.remove('show')}
 // ===== HEARTS EMPTY =====
 function showHeartsEmpty(){
   const retryBtn = document.getElementById('btn-retry');
-  if(S.premium){
-    retryBtn.textContent = '🔄 Ulang Lesson (Premium)';
-    retryBtn.disabled = false;
-  } else if(S.keys > 0){
-    retryBtn.textContent = `🔄 Ulang Lesson (1 🔑 — sisa ${S.keys - 1})`;
-    retryBtn.disabled = false;
-  } else {
-    retryBtn.textContent = '🔑 Kunci habis — Upgrade Premium';
-    retryBtn.disabled = false;
-    retryBtn.onclick = ()=>{ closeHeartsEmpty(); openDonate(); };
-    document.getElementById('ov-hearts').classList.add('show');
-    return;
-  }
+  retryBtn.textContent = '🔄 Ulang Lesson';
+  retryBtn.disabled = false;
   retryBtn.onclick = ()=>retryLesson();
   document.getElementById('ov-hearts').classList.add('show');
 }
 
 function retryLesson(){
-  if(!S.premium && S.keys > 0){
-    S.keys--;
-    saveUserData();
-    updateKeyBar();
-  } else if(!S.premium && S.keys <= 0){
-    closeHeartsEmpty();
-    openDonate();
-    return;
-  }
   closeHeartsEmpty();
   startL(S.cL);
 }
@@ -951,16 +868,9 @@ async function sendReport(){
   }
 }
 
-// ===== SAWERIA PAYMENT =====
+// ===== SAWERIA DONATION =====
 function openDonate(){
   toggleProfile(); // close profile if open
-  const price = SAWERIA_CONFIG.premiumAmount || 29000;
-  document.getElementById('donate-price').textContent = 'Rp ' + price.toLocaleString('id-ID');
-  // Show user's email so they can copy it
-  const emailEl = document.getElementById('donate-email');
-  if(emailEl && currentUser){
-    emailEl.textContent = currentUser.email || '-';
-  }
   document.getElementById('ov-donate').classList.add('show');
 }
 function closeDonate(){document.getElementById('ov-donate').classList.remove('show')}
@@ -970,79 +880,8 @@ function openSaweria(){
     alert('⚠️ Admin belum mengatur link Saweria. Silakan hubungi admin.');
     return;
   }
-  // Log pending donation intent to Firestore (helps admin trace manual aktivasi)
-  try{
-    db.collection('donation_intents').add({
-      userId: currentUser.uid,
-      userEmail: currentUser.email,
-      userName: currentUser.displayName || '',
-      amount: SAWERIA_CONFIG.premiumAmount,
-      status: 'opened',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  } catch(e){ console.error('Intent log error:', e) }
-
-  // Open Saweria in new tab with pre-filled amount (if supported)
   const url = `https://saweria.co/${SAWERIA_CONFIG.username}`;
   window.open(url, '_blank');
-}
-
-async function checkPremiumStatus(){
-  const btn = event.target;
-  btn.disabled = true;
-  const oldText = btn.textContent;
-  btn.textContent = '🔄 Mengecek...';
-
-  try{
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    if(doc.exists && doc.data().premium){
-      S.premium = true;
-      S.keys = 999;
-      closeDonate();
-      updateKeyBar();
-      renderHome();
-      alert('🎉 Terima kasih! Kamu sekarang Premium — Kunci Unlimited selamanya!');
-      confetti();
-    } else {
-      btn.textContent = '❌ Belum terdeteksi, coba lagi 1-2 menit';
-      setTimeout(()=>{
-        btn.disabled = false;
-        btn.textContent = oldText;
-      }, 3000);
-    }
-  } catch(e){
-    console.error('Check status error:', e);
-    btn.disabled = false;
-    btn.textContent = oldText;
-  }
-}
-
-// Auto-check premium status every 10 seconds while donate modal is open
-let premiumPollInterval = null;
-function startPremiumPolling(){
-  if(premiumPollInterval) return;
-  premiumPollInterval = setInterval(async ()=>{
-    const modalOpen = document.getElementById('ov-donate').classList.contains('show');
-    if(!modalOpen){
-      clearInterval(premiumPollInterval);
-      premiumPollInterval = null;
-      return;
-    }
-    try{
-      const doc = await db.collection('users').doc(currentUser.uid).get();
-      if(doc.exists && doc.data().premium){
-        S.premium = true;
-        S.keys = 999;
-        clearInterval(premiumPollInterval);
-        premiumPollInterval = null;
-        closeDonate();
-        updateKeyBar();
-        renderHome();
-        alert('🎉 Terima kasih! Premium aktif — Kunci Unlimited selamanya!');
-        confetti();
-      }
-    } catch(e){ /* silent */ }
-  }, 10000);
 }
 
 // ===== UI HELPERS =====
@@ -1053,13 +892,6 @@ function resetB(){const b=document.getElementById('l-btn');b.textContent='Periks
 function spawnXP(xp){const e=document.createElement('div');e.className='xf';e.textContent=`+${xp} XP`;e.style.left=(innerWidth/2-30)+'px';e.style.top=(innerHeight/2)+'px';e.style.animation='fu .8s ease-out forwards';document.body.appendChild(e);setTimeout(()=>e.remove(),900)}
 function showCmb(c){const tx={3:'🔥 3x Combo!',4:'🔥🔥 4x Fire!',5:'⚡ 5x Unstoppable!'};const e=document.createElement('div');e.className='cp';e.textContent=tx[Math.min(c,5)]||`🌟 ${c}x LEGENDARY!`;e.style.color=c>=5?'var(--acc2)':'var(--acc)';e.style.animation='ci .8s ease forwards';document.body.appendChild(e);sCm();setTimeout(()=>e.remove(),900)}
 function confetti(){const cl=['#6c5ce7','#ff6b6b','#feca57','#00b894','#fd79a8','#a29bfe'];for(let i=0;i<40;i++){const p=document.createElement('div');p.className='pt';p.style.left=Math.random()*100+'vw';p.style.top='-10px';p.style.width=p.style.height=(4+Math.random()*8)+'px';p.style.background=cl[~~(Math.random()*cl.length)];p.style.animation=`pf ${1.5+Math.random()*2}s ease-out forwards`;p.style.animationDelay=Math.random()*.5+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),4000)}}
-
-// Start polling premium status after user clicks "Buka Saweria"
-const _origOpenSaweria = openSaweria;
-openSaweria = function(){
-  _origOpenSaweria();
-  startPremiumPolling();
-};
 
 // ===== INIT =====
 // Auth state listener handles everything — see onAuthStateChanged above
