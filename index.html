@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerebrum SMP — Belajar Matematika Interaktif Gratis</title>
+<meta name="description" content="Platform belajar Matematika SMP gratis dengan gamifikasi. Seperti Duolingo tapi untuk Matematika!">
+<meta name="theme-color" content="#0a0a1a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a1a;--card:#12122a;--card2:#1a1a35;--border:#2a2a50;--pri:#6c5ce7;--pri-g:rgba(108,92,231,.3);--acc:#ff6b6b;--acc2:#feca57;--grn:#00b894;--grn-g:rgba(0,184,148,.3);--txt:#e8e8f0;--t2:#8888aa;--t3:#555577}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh}.screen.active{display:flex;flex-direction:column}
+
+/* LOADING */
+#screen-loading{align-items:center;justify-content:center;gap:16px}
+#screen-loading .spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--pri);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#screen-loading p{color:var(--t2);font-size:14px}
+
+/* LOGIN */
+#screen-login{align-items:center;justify-content:center;gap:20px;padding:20px;text-align:center}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:48px 36px;max-width:420px;width:100%}
+.login-card .login-logo{font-size:56px;margin-bottom:12px}
+.login-card h1{font-size:28px;font-weight:900;background:linear-gradient(135deg,var(--pri),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.login-card p{color:var(--t2);font-size:14px;line-height:1.6;margin-bottom:28px}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;background:#fff;color:#333;border:none;padding:14px 24px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 15px rgba(0,0,0,.3)}
+.google-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.google-btn img{width:22px;height:22px}
+.login-features{display:flex;gap:20px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.login-feat{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between}
+.nav-left{display:flex;align-items:center;gap:10px}
+.logo{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--pri),var(--acc));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-center{display:flex;gap:16px;align-items:center}
+.nav-stat{display:flex;align-items:center;gap:5px;font-weight:700;font-size:14px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.level-badge{background:linear-gradient(135deg,var(--acc2),#f0932b);color:#222;font-size:12px;font-weight:800;padding:4px 12px;border-radius:20px}
+.avatar-sm{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--acc));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:2px solid var(--pri);cursor:pointer;overflow:hidden;position:relative}
+.avatar-sm img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.xp-bar-wrap{background:var(--card);padding:0 20px 8px;border-bottom:1px solid var(--border)}
+.xp-bar-info{display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:3px}
+.xp-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--pri),#a29bfe);border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* KEY BAR */
+.key-bar{background:var(--card);padding:8px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:12px}
+.key-info{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.key-info .key-count{color:var(--acc2)}
+.key-info.premium{color:var(--grn)}
+.key-upgrade{background:linear-gradient(135deg,var(--acc2),#f0932b);color:#222;border:none;padding:5px 14px;border-radius:12px;font-size:11px;font-weight:800;cursor:pointer;transition:all .2s}
+.key-upgrade:hover{transform:translateY(-1px)}
+.key-timer{font-size:11px;color:var(--t3)}
+
+/* HOME */
+.home-wrap{max-width:900px;margin:0 auto;padding:20px;flex:1}
+.welcome-card{background:linear-gradient(135deg,#1a1040,#2a1060);border-radius:20px;padding:28px;margin-bottom:24px;border:1px solid #3a2070;position:relative;overflow:hidden}
+.welcome-card::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(108,92,231,.2),transparent);border-radius:50%}
+.welcome-card h2{font-size:22px;font-weight:800;margin-bottom:6px}
+.welcome-card h2 span{background:linear-gradient(135deg,#a29bfe,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.welcome-card p{color:var(--t2);font-size:13px;line-height:1.5}
+.streak-badge{display:inline-flex;align-items:center;gap:6px;background:#ff6b3520;color:#ff6b35;padding:5px 14px;border-radius:16px;font-size:12px;font-weight:700;margin-top:10px}
+.section-title{font-size:13px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1.5px;margin:24px 0 12px}
+.path-container{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 80px}
+.path-node{cursor:pointer;transition:all .2s;text-align:center}.path-node:hover{transform:scale(1.08)}.path-node.locked{opacity:.4;pointer-events:none}.path-node.locked:hover{transform:none}
+.node-btn{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;border:4px solid;margin:0 auto;transition:all .2s}
+.node-btn.done{background:var(--grn);border-color:#00d2a0;box-shadow:0 6px 0 #009975,0 6px 20px var(--grn-g)}
+.node-btn.current{background:var(--pri);border-color:#7c6cf0;box-shadow:0 6px 0 #5a4cc7,0 6px 25px var(--pri-g);animation:bounce 2s infinite}
+.node-btn.locked-btn{background:#2a2a45;border-color:#3a3a55;box-shadow:0 6px 0 #1a1a30}
+.node-btn.quiz-btn{background:linear-gradient(135deg,var(--acc),#ee5a24);border-color:#ff7675;box-shadow:0 6px 0 #c44}
+.node-btn.challenge-btn{background:linear-gradient(135deg,#9b59b6,#8e44ad);border-color:#a569bd;box-shadow:0 6px 0 #7d3c98}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.node-label{margin-top:10px;font-size:11px;font-weight:600;color:var(--t2);max-width:130px;line-height:1.3;display:inline-block}
+.node-label.act{color:var(--txt)}
+.path-conn{width:3px;height:24px;background:var(--border);margin:0 auto}.path-conn.dconn{background:var(--grn)}
+.path-node:nth-child(4n+2){margin-left:80px}.path-node:nth-child(4n+4){margin-right:80px}
+
+/* LESSON */
+.lesson-wrap{max-width:640px;margin:0 auto;padding:20px;padding-bottom:160px;flex:1;width:100%}
+.lesson-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.back-btn{background:none;border:none;color:var(--t2);font-size:24px;cursor:pointer;padding:8px}.back-btn:hover{color:var(--txt)}
+.l-progress{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.l-prog-fill{height:100%;background:linear-gradient(90deg,var(--pri),var(--acc));border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.l-hearts{display:flex;gap:3px;font-size:18px}
+.l-title-bar{text-align:center;margin-bottom:8px;font-size:12px;color:var(--t2);font-weight:600}
+.page-dots{display:flex;gap:4px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.pdot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s}
+.pdot.act{background:var(--pri);width:20px;border-radius:4px}.pdot.dn{background:var(--grn)}
+
+/* TEACH */
+.teach{background:var(--card2);border-radius:16px;padding:28px;line-height:1.9;font-size:15px;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.teach h3{font-size:20px;font-weight:800;margin-bottom:16px}
+.teach p{margin-bottom:12px;color:#ccc}
+.teach strong,.teach b{color:var(--pri)}
+.formula-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center;font-size:22px;font-weight:800;margin:16px 0;color:var(--pri);line-height:1.6;white-space:pre-line}
+.vis-nl{background:var(--card);border-radius:14px;padding:20px;margin:16px 0;position:relative;height:90px}
+.nl-ax{position:absolute;top:38px;left:20px;right:20px;height:3px;background:var(--border);border-radius:2px}
+.nl-t{position:absolute;top:28px;width:2px;height:22px;background:var(--t3)}
+.nl-n{position:absolute;top:58px;font-size:11px;color:var(--t2);transform:translateX(-50%);font-weight:600}
+
+/* QUESTION */
+.q-card{background:linear-gradient(135deg,var(--card2),#1e1e40);border:1px solid var(--border);border-left:4px solid var(--pri);border-radius:16px;padding:20px;margin:16px 0;animation:fadeIn .3s}
+.q-card p{font-size:16px;font-weight:700;line-height:1.6;white-space:pre-line}
+.q-card .hint{font-size:12px;color:var(--t2);font-weight:400;margin-top:8px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.opt{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:16px;text-align:center;cursor:pointer;transition:all .15s;font-size:18px;font-weight:700;color:var(--txt)}
+.opt:hover{border-color:var(--pri);background:rgba(108,92,231,.08);transform:translateY(-2px)}
+.opt.sel{border-color:var(--pri);background:rgba(108,92,231,.15);box-shadow:0 0 20px var(--pri-g)}
+.opt.ok{border-color:var(--grn)!important;background:rgba(0,184,148,.15)!important;color:var(--grn)!important}
+.opt.no{border-color:var(--acc)!important;background:rgba(255,107,107,.1)!important;color:var(--acc)!important}
+.fill-w{display:flex;align-items:center;gap:10px;justify-content:center;margin:20px 0}
+.fill-w span{font-size:18px;font-weight:600}
+.fill-in{width:120px;background:var(--card);border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;font-size:22px;font-weight:800;color:var(--pri);outline:none;transition:border-color .2s}
+.fill-in:focus{border-color:var(--pri)}
+.fill-in.f-ok{border-color:var(--grn);color:var(--grn)}
+.fill-in.f-no{border-color:var(--acc);color:var(--acc);animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* REPORT BTN */
+.report-btn{background:none;border:1px solid var(--border);color:var(--t3);padding:6px 12px;border-radius:10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;margin:12px auto 0;transition:all .2s}
+.report-btn:hover{border-color:var(--acc);color:var(--acc)}
+
+/* BOTTOM */
+.btm{position:fixed;bottom:0;left:0;right:0;z-index:50}
+.fb{padding:14px 20px;display:none;align-items:center;gap:12px;max-width:640px;margin:0 auto}
+.fb.show{display:flex}
+.fb.fb-ok{background:rgba(0,184,148,.15);border-top:2px solid var(--grn)}
+.fb.fb-no{background:rgba(255,107,107,.12);border-top:2px solid var(--acc)}
+.fb-i{font-size:26px}.fb-t h4{font-size:14px;font-weight:800}.fb-t p{font-size:12px;color:var(--t2)}
+.act-bar{background:var(--card);border-top:1px solid var(--border);padding:12px 20px}
+.act-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.combo-d{font-size:13px;font-weight:700}.combo-d .cn{color:var(--acc2);font-size:18px}
+.bg{display:flex;gap:8px}
+.cbtn{background:linear-gradient(135deg,var(--pri),#7c6cf0);color:#fff;border:none;padding:14px 36px;border-radius:14px;font-weight:800;font-size:15px;cursor:pointer;transition:all .2s;box-shadow:0 4px 0 #4a3cb5}
+.cbtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 0 #4a3cb5,0 6px 20px var(--pri-g)}
+.cbtn:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #4a3cb5}
+.cbtn:disabled{opacity:.4;cursor:not-allowed}
+.cbtn.c-ok{background:linear-gradient(135deg,var(--grn),#00d2a0)!important;box-shadow:0 4px 0 #009975!important}
+.cbtn.c-no{background:linear-gradient(135deg,var(--acc),#ee5a24)!important;box-shadow:0 4px 0 #c44!important}
+.sbtn{background:none;border:1px solid var(--border);color:var(--t2);padding:14px 18px;border-radius:14px;font-weight:600;font-size:13px;cursor:pointer}.sbtn:hover{border-color:var(--t2);color:var(--txt)}
+
+/* OVERLAYS */
+.ov{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:500;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(8px)}.ov.show{display:flex}
+.mc{background:var(--card);border-radius:24px;padding:40px;text-align:center;max-width:400px;width:90%;border:1px solid var(--border)}
+.mc .bi{font-size:60px;margin-bottom:12px}
+.mc h2{font-size:24px;font-weight:900;margin-bottom:8px}
+.mc p{color:var(--t2);font-size:14px;margin-bottom:20px;line-height:1.5}
+.sr{display:flex;justify-content:center;gap:24px;margin:16px 0}
+.sb{text-align:center}.sb .sn{font-size:28px;font-weight:900;color:var(--pri)}.sb .sl{font-size:11px;color:var(--t2)}
+.mb{color:#fff;border:none;padding:14px 40px;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;width:100%;transition:all .2s}.mb:hover{transform:translateY(-2px)}
+.mb.mg{background:linear-gradient(135deg,var(--grn),#00d2a0)}.mb.mgo{background:linear-gradient(135deg,var(--acc2),#f0932b);color:#222}
+.lvb{border-color:var(--acc2)!important;box-shadow:0 0 60px rgba(254,202,87,.15)}
+
+/* HEARTS EMPTY OVERLAY */
+.mc .hearts-empty-icon{font-size:48px;margin-bottom:8px}
+.retry-cost{display:flex;align-items:center;justify-content:center;gap:6px;margin:12px 0;font-size:13px;color:var(--t2)}
+.mb.m-retry{background:linear-gradient(135deg,var(--pri),#7c6cf0);margin-bottom:10px}
+.mb.m-exit{background:var(--card2);border:1px solid var(--border);color:var(--t2)}
+
+/* REPORT MODAL */
+.report-modal{background:var(--card);border-radius:20px;padding:32px;max-width:400px;width:90%;border:1px solid var(--border)}
+.report-modal h3{font-size:18px;font-weight:800;margin-bottom:16px}
+.report-modal select{width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--border);padding:12px;border-radius:10px;font-size:14px;margin-bottom:12px;outline:none}
+.report-modal textarea{width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--border);padding:12px;border-radius:10px;font-size:14px;min-height:80px;resize:vertical;outline:none;font-family:inherit;margin-bottom:16px}
+.report-modal textarea:focus,.report-modal select:focus{border-color:var(--pri)}
+.report-btns{display:flex;gap:8px}
+.report-btns button{flex:1;padding:12px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;border:none;transition:all .2s}
+.report-btns .r-cancel{background:var(--card2);color:var(--t2);border:1px solid var(--border)}
+.report-btns .r-send{background:linear-gradient(135deg,var(--acc),#ee5a24);color:#fff}
+.report-btns .r-send:disabled{opacity:.4;cursor:not-allowed}
+.report-success{color:var(--grn);font-size:13px;margin-top:8px;display:none}
+
+/* PROFILE DROPDOWN */
+.profile-dropdown{position:absolute;top:55px;right:10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px;min-width:200px;z-index:200;display:none;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.profile-dropdown.show{display:block}
+.profile-dropdown .pd-header{padding:12px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.profile-dropdown .pd-name{font-weight:700;font-size:14px}
+.profile-dropdown .pd-email{font-size:11px;color:var(--t2)}
+.profile-dropdown .pd-premium{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--acc2);font-weight:700;margin-top:4px}
+.pd-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--t2);transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.pd-item:hover{background:var(--card2);color:var(--txt)}
+.pd-item.pd-logout{color:var(--acc)}
+
+/* NO KEYS OVERLAY */
+.no-keys-info{background:var(--card2);border-radius:12px;padding:16px;margin:12px 0}
+.no-keys-info p{font-size:13px;color:var(--t2);margin-bottom:4px}
+.mb.m-donate{background:linear-gradient(135deg,var(--acc2),#f0932b);color:#222;margin-bottom:10px}
+
+.xf{position:fixed;pointer-events:none;z-index:600;font-size:20px;font-weight:900;color:var(--pri);opacity:0}
+@keyframes fu{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.3)}}
+.cp{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:550;font-size:32px;font-weight:900;pointer-events:none;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+@keyframes ci{0%{transform:translate(-50%,-50%) scale(0);opacity:0}50%{transform:translate(-50%,-50%) scale(1.3);opacity:1}100%{transform:translate(-50%,-50%) scale(0);opacity:0}}
+.pt{position:fixed;pointer-events:none;z-index:999;border-radius:50%}
+@keyframes pf{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+/* DONATE FLOAT */
+.donate-float{position:fixed;bottom:20px;right:20px;z-index:90;background:linear-gradient(135deg,var(--grn),#00d2a0);color:#fff;border:none;padding:12px 20px;border-radius:16px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 20px var(--grn-g);transition:all .2s;display:flex;align-items:center;gap:6px}
+.donate-float:hover{transform:translateY(-3px);box-shadow:0 8px 30px var(--grn-g)}
+
+/* ERROR */
+.error-card{background:var(--card);border:1px solid var(--acc);border-radius:16px;padding:32px;max-width:500px;text-align:center}
+.error-card h3{color:var(--acc);margin-bottom:12px}
+.error-card p{color:var(--t2);font-size:13px;line-height:1.6;margin-bottom:8px}
+.error-card code{background:var(--card2);padding:2px 8px;border-radius:6px;font-size:12px;color:var(--pri)}
+.error-card a{color:var(--pri)}
+
+@media(max-width:600px){.opts{grid-template-columns:1fr}.path-node:nth-child(4n+2){margin-left:50px}.path-node:nth-child(4n+4){margin-right:50px}.nav-stat{font-size:12px}.donate-float{bottom:80px;right:12px;padding:10px 16px;font-size:12px}.login-card{padding:32px 20px}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="screen active" id="screen-loading">
+  <div class="spinner"></div>
+  <p>Memuat...</p>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="screen-login">
+  <div class="login-card">
+    <div class="login-logo">🧠</div>
+    <h1>Cerebrum SMP</h1>
+    <p>Platform belajar Matematika interaktif yang <strong>100% gratis</strong>. Login untuk menyimpan progress belajarmu!</p>
+    <button class="google-btn" onclick="loginGoogle()">
+      <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Masuk dengan Google
+    </button>
+    <div class="login-features">
+      <div class="login-feat">✅ Simpan progress</div>
+      <div class="login-feat">🔥 Sync antar device</div>
+      <div class="login-feat">🏆 Leaderboard</div>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="screen" id="screen-error">
+  <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px">
+    <div class="error-card">
+      <h3>Tidak Bisa Memuat Data</h3>
+      <p>Pastikan Google Sheet ID sudah benar di file <code>config.js</code></p>
+      <p>Dan pastikan Google Sheet sudah di-publish ke web.</p>
+      <p style="margin-top:12px"><a href="https://github.com" target="_blank">Lihat panduan setup</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="screen" id="screen-home">
+  <nav class="nav">
+    <div class="nav-left"><span style="font-size:22px">🧠</span><span class="logo">Cerebrum</span></div>
+    <div class="nav-center">
+      <div class="nav-stat"><span>🔥</span><span id="h-streak">0</span></div>
+      <div class="nav-stat"><span>⚡</span><span id="h-xp">0</span></div>
+      <div class="nav-stat"><span>🔑</span><span id="h-keys">2</span></div>
+    </div>
+    <div class="nav-right">
+      <div class="level-badge" id="h-lvl">Lv.1</div>
+      <div class="avatar-sm" id="avatar-btn" onclick="toggleProfile()"><span id="avatar-letter">A</span></div>
+    </div>
+  </nav>
+  <div class="profile-dropdown" id="profile-dd">
+    <div class="pd-header">
+      <div class="pd-name" id="pd-name">User</div>
+      <div class="pd-email" id="pd-email">-</div>
+      <div class="pd-premium" id="pd-premium" style="display:none">⭐ Premium — Kunci Unlimited</div>
+    </div>
+    <button class="pd-item" onclick="openDonate()">🔑 Upgrade ke Premium</button>
+    <button class="pd-item pd-logout" onclick="logoutUser()">🚪 Keluar</button>
+  </div>
+  <div class="xp-bar-wrap">
+    <div class="xp-bar-info"><span id="h-ln">Level 1 — Pemula</span><span id="h-xt">0/100 XP</span></div>
+    <div class="xp-bar"><div class="xp-fill" id="h-xb" style="width:0%"></div></div>
+  </div>
+  <div class="key-bar" id="key-bar">
+    <div class="key-info" id="key-display">🔑 <span class="key-count" id="key-count">2</span> / 2 kunci tersisa hari ini</div>
+    <div class="key-timer" id="key-timer"></div>
+    <button class="key-upgrade" onclick="openDonate()" id="key-upgrade-btn">Upgrade Unlimited</button>
+  </div>
+  <div class="home-wrap">
+    <div class="welcome-card">
+      <h2>Halo, <span id="welcome-name">Pelajar</span>! 👋</h2>
+      <p>Selamat datang di <strong>Cerebrum SMP</strong> — platform belajar Matematika interaktif yang 100% gratis!</p>
+      <div class="streak-badge" id="h-sb">🔥 Mulai streak pertamamu!</div>
+    </div>
+    <div class="section-title">📐 Bab 1 — Bilangan Bulat dan Pecahan</div>
+    <div class="path-container" id="lesson-path"></div>
+  </div>
+  <button class="donate-float" onclick="openDonate()">💚 Dukung Cerebrum</button>
+</div>
+
+<!-- LESSON -->
+<div class="screen" id="screen-lesson">
+  <div class="lesson-wrap">
+    <div class="lesson-header">
+      <button class="back-btn" onclick="exitLesson()">←</button>
+      <div class="l-progress"><div class="l-prog-fill" id="l-pg" style="width:0%"></div></div>
+      <div class="l-hearts" id="l-hr"></div>
+    </div>
+    <div class="l-title-bar" id="l-tb"></div>
+    <div class="page-dots" id="l-dots"></div>
+    <div id="l-body"></div>
+  </div>
+  <div class="btm">
+    <div class="fb" id="fb"><div class="fb-i" id="fbi"></div><div class="fb-t"><h4 id="fbt"></h4><p id="fbd"></p></div></div>
+    <div class="act-bar"><div class="act-inner">
+      <div class="combo-d">Combo: <span class="cn" id="l-cm">0</span>x</div>
+      <div class="bg"><button class="sbtn" onclick="skip()">Lewati</button><button class="cbtn" id="l-btn" disabled>Periksa</button></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- OVERLAY: LESSON DONE -->
+<div class="ov" id="ov-done"><div class="mc"><div class="bi" id="od-i">🎉</div><h2 id="od-t">Lesson Selesai!</h2><p id="od-d"></p><div class="sr"><div class="sb"><div class="sn" id="od-xp">0</div><div class="sl">XP Didapat</div></div><div class="sb"><div class="sn" id="od-c">0</div><div class="sl">Benar</div></div><div class="sb"><div class="sn" id="od-m">0</div><div class="sl">Max Combo</div></div></div><button class="mb mg" onclick="closeDone()">Lanjut →</button></div></div>
+
+<!-- OVERLAY: LEVEL UP -->
+<div class="ov" id="ov-lvl"><div class="mc lvb"><div style="font-size:40px">⭐🌟⭐</div><h2 style="background:linear-gradient(135deg,var(--acc2),#f0932b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">LEVEL UP!</h2><p id="ol-t"></p><button class="mb mgo" onclick="closeLvl()">Keren! 🎉</button></div></div>
+
+<!-- OVERLAY: HEARTS EMPTY (LESSON FAILED) -->
+<div class="ov" id="ov-hearts">
+  <div class="mc">
+    <div class="hearts-empty-icon">💔</div>
+    <h2 style="color:var(--acc)">Hati Habis!</h2>
+    <p>Lesson gagal. Kamu bisa mengulang lesson ini jika masih punya kunci.</p>
+    <div class="retry-cost">🔑 Mengulang lesson menggunakan 1 kunci</div>
+    <button class="mb m-retry" id="btn-retry" onclick="retryLesson()">🔄 Ulang Lesson (1 🔑)</button>
+    <button class="mb m-exit" onclick="heartsExitHome()">← Kembali ke Home</button>
+  </div>
+</div>
+
+<!-- OVERLAY: NO KEYS -->
+<div class="ov" id="ov-nokeys">
+  <div class="mc">
+    <div style="font-size:48px;margin-bottom:8px">🔒</div>
+    <h2>Kunci Habis!</h2>
+    <p>Kunci harianmu sudah terpakai semua. Kunci baru akan tersedia besok!</p>
+    <div class="no-keys-info">
+      <p>🔑 Kunci reset setiap <strong style="color:var(--txt)">tengah malam</strong></p>
+      <p id="nokeys-timer"></p>
+    </div>
+    <button class="mb m-donate" onclick="closeNoKeys();openDonate()">⭐ Upgrade Premium — Kunci Unlimited</button>
+    <button class="mb m-exit" onclick="closeNoKeys()">← Kembali</button>
+  </div>
+</div>
+
+<!-- OVERLAY: REPORT -->
+<div class="ov" id="ov-report">
+  <div class="report-modal">
+    <h3>🚩 Laporkan Masalah</h3>
+    <select id="report-type">
+      <option value="">— Pilih jenis masalah —</option>
+      <option value="soal_salah">Soal salah / tidak jelas</option>
+      <option value="jawaban_salah">Jawaban benar tapi dianggap salah</option>
+      <option value="penjelasan_kurang">Penjelasan kurang jelas</option>
+      <option value="typo">Typo / kesalahan penulisan</option>
+      <option value="lainnya">Lainnya</option>
+    </select>
+    <textarea id="report-detail" placeholder="Jelaskan masalahnya (opsional)..."></textarea>
+    <div class="report-btns">
+      <button class="r-cancel" onclick="closeReport()">Batal</button>
+      <button class="r-send" id="report-send" onclick="sendReport()">Kirim Laporan</button>
+    </div>
+    <div class="report-success" id="report-success">✅ Laporan terkirim! Terima kasih.</div>
+  </div>
+</div>
+
+<!-- OVERLAY: DONATE / SAWERIA -->
+<div class="ov" id="ov-donate">
+  <div class="mc">
+    <div style="font-size:48px;margin-bottom:8px">⭐</div>
+    <h2 style="background:linear-gradient(135deg,var(--acc2),#f0932b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Cerebrum Premium</h2>
+    <p>Dukung Cerebrum dan dapatkan <strong style="color:var(--acc2)">kunci unlimited</strong> selamanya!</p>
+    <div style="background:var(--card2);border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+      <div style="font-size:13px;color:var(--t2);margin-bottom:8px">Yang kamu dapat:</div>
+      <div style="font-size:14px;margin-bottom:6px">🔑 Kunci unlimited (tidak ada batasan harian)</div>
+      <div style="font-size:14px;margin-bottom:6px">❤️ Akses semua materi tanpa batas</div>
+      <div style="font-size:14px">🌟 Badge premium di profil</div>
+    </div>
+    <div style="font-size:28px;font-weight:900;color:var(--acc2);margin:8px 0" id="donate-price">Rp 29.000</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Sekali donasi, premium selamanya!</div>
+
+    <div style="background:rgba(108,92,231,.1);border:1px solid var(--pri);border-radius:12px;padding:14px;margin:12px 0;text-align:left">
+      <div style="font-size:12px;font-weight:800;color:var(--pri);margin-bottom:6px">📌 PENTING — Cara Premium Aktif Otomatis:</div>
+      <div style="font-size:12px;color:var(--txt);line-height:1.6">
+        1. Klik <strong>"Buka Saweria"</strong> di bawah<br>
+        2. Donasi minimal <strong>Rp 29.000</strong><br>
+        3. Di kolom pesan, <strong>tulis email Google kamu</strong>:<br>
+        <code id="donate-email" style="background:var(--card2);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--acc2);display:inline-block;margin-top:4px">-</code><br>
+        4. Bayar → premium aktif dalam 1-2 menit
+      </div>
+    </div>
+
+    <button class="mb mgo" onclick="openSaweria()" id="btn-pay">💚 Buka Saweria</button>
+    <button class="mb" onclick="checkPremiumStatus()" style="margin-top:10px;background:var(--card2);border:1px solid var(--border);color:var(--txt)">🔄 Sudah bayar? Cek status</button>
+    <button class="mb m-exit" style="margin-top:10px" onclick="closeDonate()">← Nanti saja</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+// ===== FIREBASE INIT =====
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null;
+
+// ===== STATE =====
+const S={
+  xp:0,hearts:5,mh:5,streak:0,
+  combo:0,maxCombo:0,lXP:0,lOk:0,lTot:0,
+  cL:-1,cS:0,sel:null,ans:false,
+  done:[],
+  lastDay:'',
+  level:1,
+  keys:2,maxKeys:2,lastKeyReset:'',premium:false,
+  lvlXP:[0,100,250,400,650,1000,1500,2200,3000],
+  lvlN:['','Pemula','Penjelajah','Petualang','Penemu','Ahli Muda','Matematikawan','Jenius','Master Cerebrum'],
+  lessons:[],
+  reportCtx:null, // {lessonId, stepOrder, stepType, question}
+};
+
+// ===== AUTH =====
+function loginGoogle(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err=>{
+    console.error('Login error:', err);
+    alert('Gagal login: ' + err.message);
+  });
+}
+
+function logoutUser(){
+  toggleProfile();
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(async(user)=>{
+  if(user){
+    currentUser = user;
+    await loadUserData();
+    loadData();
+  } else {
+    currentUser = null;
+    show('screen-login');
+  }
+});
+
+// ===== FIRESTORE =====
+async function loadUserData(){
+  if(!currentUser) return;
+  try{
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    if(doc.exists){
+      const d = doc.data();
+      S.xp = d.xp || 0;
+      S.streak = d.streak || 0;
+      S.done = d.done || [];
+      S.lastDay = d.lastDay || '';
+      S.keys = d.keys ?? 2;
+      S.maxKeys = 2;
+      S.lastKeyReset = d.lastKeyReset || '';
+      S.premium = d.premium || false;
+    } else {
+      // New user — create doc
+      await db.collection('users').doc(currentUser.uid).set({
+        xp:0, streak:0, done:[], lastDay:'', keys:2, lastKeyReset:'', premium:false,
+        displayName: currentUser.displayName || '',
+        email: currentUser.email || '',
+        photoURL: currentUser.photoURL || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    // Check key reset
+    resetKeysIfNewDay();
+  } catch(e){ console.error('Firestore load error:', e); }
+}
+
+async function saveUserData(){
+  if(!currentUser) return;
+  try{
+    await db.collection('users').doc(currentUser.uid).update({
+      xp: S.xp,
+      streak: S.streak,
+      done: S.done,
+      lastDay: S.lastDay,
+      keys: S.keys,
+      lastKeyReset: S.lastKeyReset,
+      premium: S.premium,
+    });
+  } catch(e){ console.error('Firestore save error:', e); }
+}
+
+function resetKeysIfNewDay(){
+  const today = new Date().toDateString();
+  if(S.lastKeyReset !== today){
+    S.keys = S.maxKeys;
+    S.lastKeyReset = today;
+    saveUserData();
+  }
+}
+
+function calcLvl(){for(let i=S.lvlXP.length-1;i>=0;i--)if(S.xp>=S.lvlXP[i]){S.level=i;break}}
+
+function checkStreak(){
+  const today=new Date().toDateString();
+  if(S.lastDay===today)return;
+  const yesterday=new Date(Date.now()-864e5).toDateString();
+  if(S.lastDay===yesterday){S.streak++;} else if(S.lastDay!==today){S.streak=1;}
+  S.lastDay=today;
+  saveUserData();
+}
+
+// ===== AUDIO =====
+const AC=window.AudioContext||window.webkitAudioContext;let ac;
+function ea(){if(!ac)ac=new AC()}
+function t(f,d,tp='sine',v=.12){ea();const o=ac.createOscillator(),g=ac.createGain();o.type=tp;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}
+function sOk(){t(523,.1);setTimeout(()=>t(659,.1),100);setTimeout(()=>t(784,.15),200)}
+function sNo(){t(200,.15,'sawtooth',.08);setTimeout(()=>t(180,.2,'sawtooth',.08),150)}
+function sCm(){t(880,.08);setTimeout(()=>t(1047,.08),80);setTimeout(()=>t(1319,.12),160)}
+function sLv(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>t(f,.2,'triangle',.1),i*120))}
+function sC(){t(440,.05,'sine',.06)}
+
+// ===== FETCH GOOGLE SHEETS =====
+function sheetURL(name){
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
+}
+
+async function loadData(){
+  try{
+    const [lessonsCSV, stepsCSV] = await Promise.all([
+      fetch(sheetURL(SHEET_NAMES.lessons)).then(r=>{if(!r.ok)throw new Error();return r.text()}),
+      fetch(sheetURL(SHEET_NAMES.steps)).then(r=>{if(!r.ok)throw new Error();return r.text()})
+    ]);
+
+    function smartParse(csv){
+      const parsed = Papa.parse(csv, {header:true, skipEmptyLines:true});
+      const fixedHeaders = parsed.meta.fields.map(f=>{
+        const parts = f.trim().split(/\s+/);
+        return parts[parts.length-1].toLowerCase();
+      });
+      return parsed.data.map(row=>{
+        const fixed={};
+        parsed.meta.fields.forEach((orig,i)=>{
+          fixed[fixedHeaders[i]]=row[orig];
+        });
+        return fixed;
+      });
+    }
+    const lessonsData = smartParse(lessonsCSV);
+    const stepsData = smartParse(stepsCSV);
+
+    const lessons = lessonsData.filter(r=>r.lesson_id).map(r=>({
+      id: r.lesson_id.trim(),
+      bab: +r.bab||1,
+      order: +r.order||0,
+      title: r.title||'',
+      type: r.type||'concept',
+      xp: +r.xp_reward||10,
+      unlock: r.unlock_after||'-',
+      desc: r.description||'',
+      steps: []
+    }));
+
+    const stepMap = {};
+    stepsData.filter(r=>r.lesson_id&&r.type).forEach(r=>{
+      const lid = r.lesson_id.trim();
+      const step = { type: r.type.trim(), order: +r.step_order||0 };
+      if(step.type==='teach'){
+        step.title = r.title||'';
+        step.content = r.content||'';
+        step.vtype = r.visual_type||'none';
+        step.vdata = r.visual_data||'';
+      } else if(step.type==='mcq'){
+        step.question = r.question||'';
+        step.options = [r.option_a||'',r.option_b||'',r.option_c||'',r.option_d||''];
+        const cl = (r.correct_answer||'a').trim().toLowerCase();
+        step.correct = {a:0,b:1,c:2,d:3}[cl]||0;
+        step.explanation = r.explanation||'';
+      } else if(step.type==='fill'){
+        step.question = r.question||'';
+        step.answer = (r.correct_answer||'').trim();
+        step.hint = r.hint||'';
+        step.explanation = r.explanation||'';
+      }
+      if(!stepMap[lid]) stepMap[lid]=[];
+      stepMap[lid].push(step);
+    });
+
+    lessons.forEach(l=>{
+      l.steps = (stepMap[l.id]||[]).sort((a,b)=>a.order-b.order);
+    });
+    lessons.sort((a,b)=>a.order-b.order);
+    S.lessons = lessons;
+
+    checkStreak();
+    calcLvl();
+    resetKeysIfNewDay();
+    show('screen-home');
+    renderHome();
+
+    console.log(`✅ Loaded ${lessons.length} lessons, ${stepsData.length} steps`);
+  } catch(e){
+    console.error('Load error:', e);
+    show('screen-error');
+  }
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== FORMAT =====
+function fmt(txt){
+  if(!txt)return'';
+  return txt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+}
+
+// ===== HOME =====
+function renderHome(){
+  // Update user info
+  if(currentUser){
+    const name = (currentUser.displayName || 'Pelajar').split(' ')[0];
+    document.getElementById('welcome-name').textContent = name;
+    document.getElementById('pd-name').textContent = currentUser.displayName || 'User';
+    document.getElementById('pd-email').textContent = currentUser.email || '';
+    const avatarBtn = document.getElementById('avatar-btn');
+    if(currentUser.photoURL){
+      avatarBtn.innerHTML = `<img src="${currentUser.photoURL}" alt="avatar">`;
+    } else {
+      avatarBtn.innerHTML = `<span>${(currentUser.displayName||'A')[0].toUpperCase()}</span>`;
+    }
+    // Premium badge
+    document.getElementById('pd-premium').style.display = S.premium ? 'block' : 'none';
+  }
+
+  // Key bar
+  updateKeyBar();
+
+  const ls=S.lessons;let h='';
+  ls.forEach((l,i)=>{
+    const dn=S.done.includes(l.id);
+    const cur=!dn&&(i===0||S.done.includes(ls[i-1].id));
+    const lk=!dn&&!cur;
+    const noSteps=l.steps.length===0;
+    const isLocked=lk||noSteps;
+    const icons={concept:'📖',practice:'✏️',quiz:'🏆',challenge:'⚔️'};
+    let bc=dn?'done':cur?'current':l.type==='quiz'?'quiz-btn':l.type==='challenge'?'challenge-btn':'locked-btn';
+    if(noSteps&&!dn)bc='locked-btn';
+    const ic=dn?'✓':isLocked?'🔒':icons[l.type]||'📖';
+    if(i>0)h+=`<div class="path-conn ${dn||cur?'dconn':''}"></div>`;
+    h+=`<div class="path-node ${isLocked?'locked':''}" onclick="${isLocked?'':`tryStartLesson(${i})`}"><div class="node-btn ${bc}">${ic}</div><div class="node-label ${cur?'act':''}">${l.title}${noSteps&&!dn?'<br><span style=\"font-size:10px;color:var(--t3)\">(segera hadir)</span>':''}</div></div>`;
+  });
+  document.getElementById('lesson-path').innerHTML=h;
+  updHome();
+}
+
+function updateKeyBar(){
+  const keyBar = document.getElementById('key-bar');
+  const keyDisplay = document.getElementById('key-display');
+  const keyCount = document.getElementById('key-count');
+  const keyTimer = document.getElementById('key-timer');
+  const keyUpgradeBtn = document.getElementById('key-upgrade-btn');
+
+  if(S.premium){
+    keyDisplay.className = 'key-info premium';
+    keyDisplay.innerHTML = '🔑 <span style="color:var(--grn)">∞</span> Unlimited — Premium';
+    keyTimer.textContent = '';
+    keyUpgradeBtn.style.display = 'none';
+    document.getElementById('h-keys').textContent = '∞';
+  } else {
+    keyDisplay.className = 'key-info';
+    keyDisplay.innerHTML = `🔑 <span class="key-count">${S.keys}</span> / ${S.maxKeys} kunci tersisa hari ini`;
+    keyUpgradeBtn.style.display = '';
+    document.getElementById('h-keys').textContent = S.keys;
+
+    // Timer to midnight
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24,0,0,0);
+    const diff = midnight - now;
+    const hrs = Math.floor(diff/3600000);
+    const mins = Math.floor((diff%3600000)/60000);
+    keyTimer.textContent = `Reset dalam ${hrs}j ${mins}m`;
+  }
+}
+
+function updHome(){
+  document.getElementById('h-xp').textContent=S.xp;
+  document.getElementById('h-streak').textContent=S.streak;
+  document.getElementById('h-lvl').textContent=`Lv.${S.level}`;
+  document.getElementById('h-ln').textContent=`Level ${S.level} — ${S.lvlN[S.level]}`;
+  const nx=S.lvlXP[S.level+1]||S.lvlXP[S.level];const pv=S.lvlXP[S.level]||0;
+  document.getElementById('h-xb').style.width=Math.min(100,((S.xp-pv)/(nx-pv))*100)+'%';
+  document.getElementById('h-xt').textContent=`${S.xp} / ${nx} XP`;
+  document.getElementById('h-sb').textContent=S.streak>0?`🔥 ${S.streak} hari berturut-turut!`:'🔥 Mulai streak pertamamu!';
+}
+
+// ===== PROFILE DROPDOWN =====
+function toggleProfile(){
+  document.getElementById('profile-dd').classList.toggle('show');
+}
+document.addEventListener('click',(e)=>{
+  const dd = document.getElementById('profile-dd');
+  const btn = document.getElementById('avatar-btn');
+  if(dd && !dd.contains(e.target) && !btn.contains(e.target)){
+    dd.classList.remove('show');
+  }
+});
+
+// ===== KEY SYSTEM =====
+function tryStartLesson(i){
+  const lesson = S.lessons[i];
+  const alreadyDone = S.done.includes(lesson.id);
+
+  // Premium users bypass key check
+  if(S.premium){
+    startL(i);
+    return;
+  }
+
+  // Already completed lessons are free to revisit
+  if(alreadyDone){
+    startL(i);
+    return;
+  }
+
+  // Check keys
+  if(S.keys <= 0){
+    showNoKeys();
+    return;
+  }
+
+  // Use a key
+  S.keys--;
+  saveUserData();
+  updateKeyBar();
+  startL(i);
+}
+
+function showNoKeys(){
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24,0,0,0);
+  const diff = midnight - now;
+  const hrs = Math.floor(diff/3600000);
+  const mins = Math.floor((diff%3600000)/60000);
+  document.getElementById('nokeys-timer').innerHTML = `⏰ Reset dalam <strong style="color:var(--txt)">${hrs} jam ${mins} menit</strong>`;
+  document.getElementById('ov-nokeys').classList.add('show');
+}
+function closeNoKeys(){document.getElementById('ov-nokeys').classList.remove('show')}
+
+// ===== LESSON =====
+function startL(i){sC();S.cL=i;S.cS=0;S.combo=0;S.maxCombo=0;S.lXP=0;S.lOk=0;S.lTot=0;S.hearts=S.mh;S.sel=null;S.ans=false;document.getElementById('l-cm').textContent='0';show('screen-lesson');renderStep()}
+function exitLesson(){show('screen-home');hideFB();renderHome()}
+function gL(){return S.lessons[S.cL]}
+function gS(){return gL().steps[S.cS]}
+
+function renderStep(){
+  const l=gL(),s=gS(),tot=l.steps.length;
+  document.getElementById('l-pg').style.width=(S.cS/tot*100)+'%';
+  document.getElementById('l-tb').textContent=l.title;
+  rHearts();hideFB();resetB();S.sel=null;S.ans=false;
+  let dots='';for(let i=0;i<tot;i++)dots+=`<div class="pdot ${i<S.cS?'dn':i===S.cS?'act':''}"></div>`;
+  document.getElementById('l-dots').innerHTML=dots;
+  const body=document.getElementById('l-body');const btn=document.getElementById('l-btn');
+
+  // Set report context
+  S.reportCtx = {
+    lessonId: l.id,
+    lessonTitle: l.title,
+    stepOrder: s.order,
+    stepType: s.type,
+    question: s.question || s.title || ''
+  };
+
+  if(s.type==='teach'){
+    let vis='';
+    if(s.vtype==='formula'&&s.vdata)vis=`<div class="formula-box">${s.vdata}</div>`;
+    else if(s.vtype==='numberline'){
+      const p=(s.vdata||'-5,5').split(',');const mn=+p[0]||-5,mx=+p[1]||5,cnt=mx-mn;let tk='';
+      for(let n=mn;n<=mx;n++){const pc=((n-mn)/cnt)*80+10;tk+=`<div class="nl-t" style="left:${pc}%"></div><div class="nl-n" style="left:${pc}%;${n===0?'color:var(--acc2);font-weight:800':''}">${n}</div>`}
+      vis=`<div class="vis-nl"><div class="nl-ax"></div>${tk}</div>`;
+    }
+    body.innerHTML=`<div class="teach">${s.title?`<h3>${s.title}</h3>`:''}${fmt(s.content)}${vis}</div>`;
+    btn.textContent='Lanjut →';btn.disabled=false;btn.onclick=()=>next();
+  } else if(s.type==='mcq'){
+    body.innerHTML=`<div class="q-card"><p>${fmt(s.question)}</p></div><div class="opts">${s.options.map((o,i)=>`<div class="opt" onclick="selO(this,${i})">${o}</div>`).join('')}</div><button class="report-btn" onclick="openReport()">🚩 Laporkan soal ini</button>`;
+    btn.textContent='Periksa';btn.disabled=true;btn.onclick=()=>check();
+  } else if(s.type==='fill'){
+    body.innerHTML=`<div class="q-card"><p>${fmt(s.question)}</p>${s.hint?`<p class="hint">💡 ${s.hint}</p>`:''}</div><div class="fill-w"><span>Jawaban:</span><input type="text" class="fill-in" id="fi" placeholder="?" oninput="onFI(this)" autocomplete="off"></div><button class="report-btn" onclick="openReport()">🚩 Laporkan soal ini</button>`;
+    btn.textContent='Periksa';btn.disabled=true;btn.onclick=()=>check();
+    setTimeout(()=>document.getElementById('fi')?.focus(),150);
+  }
+}
+
+function selO(el,i){sC();document.querySelectorAll('.opt').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');S.sel=i;document.getElementById('l-btn').disabled=false}
+function onFI(el){S.sel=el.value.trim();document.getElementById('l-btn').disabled=!el.value.trim()}
+
+function check(){
+  if(S.ans)return;S.ans=true;
+  const s=gS();let ok=false;S.lTot++;
+  if(s.type==='mcq'){
+    ok=S.sel===s.correct;
+    document.querySelectorAll('.opt').forEach((b,i)=>{b.style.pointerEvents='none';if(i===s.correct)b.classList.add('ok');if(i===S.sel&&!ok)b.classList.add('no')});
+  } else if(s.type==='fill'){
+    const a=String(S.sel).replace(/\s/g,'').replace(/[.,]/g,'').toLowerCase();
+    const tgt=String(s.answer).replace(/\s/g,'').replace(/[.,]/g,'').toLowerCase();
+    ok=(a===tgt);
+    const inp=document.getElementById('fi');inp.readOnly=true;
+    if(ok)inp.classList.add('f-ok');else{inp.classList.add('f-no');setTimeout(()=>{inp.value=s.answer;inp.className='fill-in f-ok'},600)}
+  }
+  if(ok){
+    S.combo++;if(S.combo>S.maxCombo)S.maxCombo=S.combo;S.lOk++;
+    const bonus=Math.min(S.combo,5);const xp=5+bonus;S.lXP+=xp;
+    sOk();showFB(1,'✅ Benar! +'+xp+' XP',s.explanation);spawnXP(xp);
+    if(S.combo>=3)showCmb(S.combo);
+    document.getElementById('l-cm').textContent=S.combo;
+  } else {
+    S.combo=0;S.hearts=Math.max(0,S.hearts-1);
+    sNo();showFB(0,'❌ Belum tepat',s.explanation);rHearts();
+    document.getElementById('l-cm').textContent='0';
+
+    // Check if hearts empty
+    if(S.hearts <= 0){
+      setTimeout(()=>showHeartsEmpty(), 1200);
+      return;
+    }
+  }
+  const btn=document.getElementById('l-btn');
+  btn.textContent='Lanjut →';btn.disabled=false;btn.className='cbtn '+(ok?'c-ok':'c-no');btn.onclick=()=>next();
+}
+
+function next(){sC();S.cS++;if(S.cS>=gL().steps.length)complete();else renderStep()}
+function skip(){sC();const s=gS();if(s.type!=='teach'){S.lTot++;S.combo=0;document.getElementById('l-cm').textContent='0'}next()}
+
+function complete(){
+  const l=gL();const bonus=l.xp||10;const total=S.lXP+bonus;
+  S.xp+=total;const oldLvl=S.level;
+  if(!S.done.includes(l.id))S.done.push(l.id);
+  saveUserData();calcLvl();
+  document.getElementById('l-pg').style.width='100%';
+  const acc=S.lTot>0?Math.round((S.lOk/S.lTot)*100):100;
+  document.getElementById('od-i').textContent=l.type==='quiz'?'🏆':'🎉';
+  document.getElementById('od-t').textContent=l.type==='quiz'?'Quiz Selesai!':'Lesson Selesai!';
+  document.getElementById('od-d').textContent=acc>=80?'Luar biasa! Kamu menguasai materi ini! 🌟':acc>=50?'Bagus! Terus berlatih ya! 💪':'Jangan menyerah! Ulangi lesson ini.';
+  document.getElementById('od-xp').textContent=total;
+  document.getElementById('od-c').textContent=S.lOk+'/'+S.lTot;
+  document.getElementById('od-m').textContent=S.maxCombo+'x';
+  document.getElementById('ov-done').classList.add('show');
+  confetti();
+  if(S.level>oldLvl)setTimeout(()=>{document.getElementById('ol-t').textContent=`Kamu naik ke Level ${S.level} — ${S.lvlN[S.level]}!`;document.getElementById('ov-lvl').classList.add('show');sLv()},1500);
+}
+
+function closeDone(){document.getElementById('ov-done').classList.remove('show');exitLesson()}
+function closeLvl(){document.getElementById('ov-lvl').classList.remove('show')}
+
+// ===== HEARTS EMPTY =====
+function showHeartsEmpty(){
+  const retryBtn = document.getElementById('btn-retry');
+  if(S.premium){
+    retryBtn.textContent = '🔄 Ulang Lesson (Premium)';
+    retryBtn.disabled = false;
+  } else if(S.keys > 0){
+    retryBtn.textContent = `🔄 Ulang Lesson (1 🔑 — sisa ${S.keys - 1})`;
+    retryBtn.disabled = false;
+  } else {
+    retryBtn.textContent = '🔑 Kunci habis — Upgrade Premium';
+    retryBtn.disabled = false;
+    retryBtn.onclick = ()=>{ closeHeartsEmpty(); openDonate(); };
+    document.getElementById('ov-hearts').classList.add('show');
+    return;
+  }
+  retryBtn.onclick = ()=>retryLesson();
+  document.getElementById('ov-hearts').classList.add('show');
+}
+
+function retryLesson(){
+  if(!S.premium && S.keys > 0){
+    S.keys--;
+    saveUserData();
+    updateKeyBar();
+  } else if(!S.premium && S.keys <= 0){
+    closeHeartsEmpty();
+    openDonate();
+    return;
+  }
+  closeHeartsEmpty();
+  startL(S.cL);
+}
+
+function heartsExitHome(){
+  closeHeartsEmpty();
+  exitLesson();
+}
+
+function closeHeartsEmpty(){document.getElementById('ov-hearts').classList.remove('show')}
+
+// ===== REPORT =====
+function openReport(){
+  document.getElementById('report-type').value='';
+  document.getElementById('report-detail').value='';
+  document.getElementById('report-success').style.display='none';
+  document.getElementById('report-send').disabled=false;
+  document.getElementById('ov-report').classList.add('show');
+}
+
+function closeReport(){document.getElementById('ov-report').classList.remove('show')}
+
+async function sendReport(){
+  const type = document.getElementById('report-type').value;
+  if(!type){alert('Pilih jenis masalah terlebih dahulu');return}
+  const detail = document.getElementById('report-detail').value.trim();
+  const btn = document.getElementById('report-send');
+  btn.disabled = true;
+  btn.textContent = 'Mengirim...';
+
+  try{
+    await db.collection('reports').add({
+      userId: currentUser?.uid || 'anonymous',
+      userName: currentUser?.displayName || 'Anonymous',
+      userEmail: currentUser?.email || '',
+      lessonId: S.reportCtx?.lessonId || '',
+      lessonTitle: S.reportCtx?.lessonTitle || '',
+      stepOrder: S.reportCtx?.stepOrder || 0,
+      stepType: S.reportCtx?.stepType || '',
+      question: S.reportCtx?.question || '',
+      reportType: type,
+      detail: detail,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      status: 'new'
+    });
+    document.getElementById('report-success').style.display='block';
+    btn.textContent = 'Terkirim!';
+    setTimeout(()=>closeReport(), 1500);
+  } catch(e){
+    console.error('Report error:', e);
+    alert('Gagal mengirim laporan. Coba lagi nanti.');
+    btn.disabled = false;
+    btn.textContent = 'Kirim Laporan';
+  }
+}
+
+// ===== SAWERIA PAYMENT =====
+function openDonate(){
+  toggleProfile(); // close profile if open
+  const price = SAWERIA_CONFIG.premiumAmount || 29000;
+  document.getElementById('donate-price').textContent = 'Rp ' + price.toLocaleString('id-ID');
+  // Show user's email so they can copy it
+  const emailEl = document.getElementById('donate-email');
+  if(emailEl && currentUser){
+    emailEl.textContent = currentUser.email || '-';
+  }
+  document.getElementById('ov-donate').classList.add('show');
+}
+function closeDonate(){document.getElementById('ov-donate').classList.remove('show')}
+
+function openSaweria(){
+  if(!SAWERIA_CONFIG.username || SAWERIA_CONFIG.username === 'YOUR_USERNAME'){
+    alert('⚠️ Admin belum mengatur link Saweria. Silakan hubungi admin.');
+    return;
+  }
+  // Log pending donation intent to Firestore (helps admin trace manual aktivasi)
+  try{
+    db.collection('donation_intents').add({
+      userId: currentUser.uid,
+      userEmail: currentUser.email,
+      userName: currentUser.displayName || '',
+      amount: SAWERIA_CONFIG.premiumAmount,
+      status: 'opened',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e){ console.error('Intent log error:', e) }
+
+  // Open Saweria in new tab with pre-filled amount (if supported)
+  const url = `https://saweria.co/${SAWERIA_CONFIG.username}`;
+  window.open(url, '_blank');
+}
+
+async function checkPremiumStatus(){
+  const btn = event.target;
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = '🔄 Mengecek...';
+
+  try{
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    if(doc.exists && doc.data().premium){
+      S.premium = true;
+      S.keys = 999;
+      closeDonate();
+      updateKeyBar();
+      renderHome();
+      alert('🎉 Terima kasih! Kamu sekarang Premium — Kunci Unlimited selamanya!');
+      confetti();
+    } else {
+      btn.textContent = '❌ Belum terdeteksi, coba lagi 1-2 menit';
+      setTimeout(()=>{
+        btn.disabled = false;
+        btn.textContent = oldText;
+      }, 3000);
+    }
+  } catch(e){
+    console.error('Check status error:', e);
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+// Auto-check premium status every 10 seconds while donate modal is open
+let premiumPollInterval = null;
+function startPremiumPolling(){
+  if(premiumPollInterval) return;
+  premiumPollInterval = setInterval(async ()=>{
+    const modalOpen = document.getElementById('ov-donate').classList.contains('show');
+    if(!modalOpen){
+      clearInterval(premiumPollInterval);
+      premiumPollInterval = null;
+      return;
+    }
+    try{
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      if(doc.exists && doc.data().premium){
+        S.premium = true;
+        S.keys = 999;
+        clearInterval(premiumPollInterval);
+        premiumPollInterval = null;
+        closeDonate();
+        updateKeyBar();
+        renderHome();
+        alert('🎉 Terima kasih! Premium aktif — Kunci Unlimited selamanya!');
+        confetti();
+      }
+    } catch(e){ /* silent */ }
+  }, 10000);
+}
+
+// ===== UI HELPERS =====
+function rHearts(){document.getElementById('l-hr').innerHTML=Array(S.mh).fill(0).map((_,i)=>i<S.hearts?'❤️':'🖤').join('')}
+function showFB(ok,title,desc){const b=document.getElementById('fb');b.className='fb show '+(ok?'fb-ok':'fb-no');document.getElementById('fbi').textContent=ok?'🎉':'💡';const tt=document.getElementById('fbt');tt.textContent=title;tt.style.color=ok?'var(--grn)':'var(--acc)';document.getElementById('fbd').textContent=desc||''}
+function hideFB(){document.getElementById('fb').className='fb'}
+function resetB(){const b=document.getElementById('l-btn');b.textContent='Periksa';b.disabled=true;b.className='cbtn'}
+function spawnXP(xp){const e=document.createElement('div');e.className='xf';e.textContent=`+${xp} XP`;e.style.left=(innerWidth/2-30)+'px';e.style.top=(innerHeight/2)+'px';e.style.animation='fu .8s ease-out forwards';document.body.appendChild(e);setTimeout(()=>e.remove(),900)}
+function showCmb(c){const tx={3:'🔥 3x Combo!',4:'🔥🔥 4x Fire!',5:'⚡ 5x Unstoppable!'};const e=document.createElement('div');e.className='cp';e.textContent=tx[Math.min(c,5)]||`🌟 ${c}x LEGENDARY!`;e.style.color=c>=5?'var(--acc2)':'var(--acc)';e.style.animation='ci .8s ease forwards';document.body.appendChild(e);sCm();setTimeout(()=>e.remove(),900)}
+function confetti(){const cl=['#6c5ce7','#ff6b6b','#feca57','#00b894','#fd79a8','#a29bfe'];for(let i=0;i<40;i++){const p=document.createElement('div');p.className='pt';p.style.left=Math.random()*100+'vw';p.style.top='-10px';p.style.width=p.style.height=(4+Math.random()*8)+'px';p.style.background=cl[~~(Math.random()*cl.length)];p.style.animation=`pf ${1.5+Math.random()*2}s ease-out forwards`;p.style.animationDelay=Math.random()*.5+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),4000)}}
+
+// Start polling premium status after user clicks "Buka Saweria"
+const _origOpenSaweria = openSaweria;
+openSaweria = function(){
+  _origOpenSaweria();
+  startPremiumPolling();
+};
+
+// ===== INIT =====
+// Auth state listener handles everything — see onAuthStateChanged above
+</script>
+</body>
+</html>
